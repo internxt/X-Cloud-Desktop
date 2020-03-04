@@ -155,6 +155,7 @@ function UploadNewFile(storj, filePath) {
         app.emit('set-tooltip', 'Uploading ' + originalFileName + ' (' + progressPtg + '%)')
       },
       finishedCallback: function (err, newFileId) {
+        console.log('FINISHED CALLBACK', newFileId)
         // Clear tooltip text, the upload is finished.
         app.emit('set-tooltip')
 
@@ -169,6 +170,8 @@ function UploadNewFile(storj, filePath) {
 
             // What if the file exists, but is not on cloud database? Let's create the entry.
             // Note that it may exist on cloud database, so catch errors --> resolve
+
+            // TODO: If the file already exists on the network, we need the bucketId and the fileId
             CreateFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId).then(resolve).catch(resolve)
           } else {
             // There was an error uploading the new file. Reject to stop the sync.
@@ -206,9 +209,7 @@ function UpdateTree() {
     GetTree().then((tree) => {
       database.Set('tree', tree).then(() => {
         resolve()
-      }).catch(err => {
-        reject(err)
-      })
+      }).catch(reject)
     }).catch(err => {
       Logger.error('Error updating tree', err)
       reject(err)
@@ -258,6 +259,8 @@ async function CreateFileEntry(bucketId, bucketEntryId, fileName, fileExtension,
     file_id: bucketEntryId,
     bucket: bucketId
   }
+
+  console.log('Metadata for file entry', file)
 
   const userData = await database.Get('xUser')
 
@@ -354,7 +357,6 @@ function CleanLocalFolders() {
 
     // Get a list of all local folders
     tree.GetLocalFolderList(localPath).then((list) => {
-
       async.eachSeries(list, (item, next) => {
         database.FolderGet(item).then(async folder => {
           if (folder) {
@@ -446,11 +448,10 @@ function RemoteCreateFolder(name, parentId) {
     }).then(async res => {
       return { res, data: await res.json() }
     }).then(res => {
-      if (res.res.status === 500 && res.data.error && res.data.error.includes('Folder with the same name already exists')) {
+      if (res.res.status === 500 && res.data.error && res.data.error.includes('already exists')) {
         Logger.warn('Folder with the same name already exists')
-        resolve()
+        resolve(res.data)
       } else if (res.res.status === 201) {
-        Logger.warn('Error creating new folder, 201')
         resolve(res.data)
       } else { reject(res.data) }
     }).catch(reject)

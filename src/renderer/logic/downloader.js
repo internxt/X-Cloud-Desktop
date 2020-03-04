@@ -80,7 +80,6 @@ function DownloadAllFiles() {
     // Get a list of all the files on the remote folder
     Tree.GetFileListFromRemoteTree().then(list => {
       async.eachSeries(list, async (item, next) => {
-
         // If not enough space on hard disk, do not download and stop syncing.
         const freeSpace = await CheckDiskSpace(path.dirname(item.fullpath))
         if (item.size * 3 >= freeSpace) { return next('No space left') }
@@ -101,12 +100,11 @@ function DownloadAllFiles() {
           // "Modified at" from local file
           const localTime = stat.mtime
 
-          if (remoteTime > localTime) { downloadAndReplace = true }
-          else if (localTime > remoteTime) { uploadAndReplace = true }
+          if (remoteTime > localTime) { downloadAndReplace = true } else if (localTime > remoteTime) { uploadAndReplace = true }
         } else {
           // Was deleted during the sync?
           const isLocallyDeleted = await Database.TempGet(item.fullpath)
-          
+
           if (isLocallyDeleted && isLocallyDeleted.value === 'unlink') {
             ignoreThisFile = true
           } else {
@@ -140,9 +138,7 @@ function DownloadAllFiles() {
         } else {
           // Check if should download to ensure file
           let shouldEnsureFile = false
-          if (!shouldEnsureFile) {
-            return next()
-          }
+          if (!shouldEnsureFile) { return next() }
           Logger.log('DOWNLOAD JUST TO ENSURE FILE')
           // Check file is ok
           DownloadFileTemp(item, true).then(tempPath => next()).catch(err => {
@@ -175,7 +171,6 @@ function UploadAllNewFiles() {
       var stat = Tree.GetStat(item)
 
       if (stat.isFile()) { // Is a file
-
         // Check if file exists in the remote database
         let entry = await Database.FileGet(item)
 
@@ -218,15 +213,12 @@ function UploadAllNewFolders() {
     const userInfo = await Database.Get('xUser')
 
     let lastParentId = null
+    // Último directorio que ha sido
     let lastParentFolder = null
 
-    // Create a list with the actual local folders
     Tree.GetLocalFolderList(localPath).then(list => {
-      // For each folder in local...
       async.eachSeries(list, async (item, next) => {
-        // Check if exists in database
         const dbEntry = await Database.FolderGet(item)
-
         // If folder exists on remote database, ignore it, it already exists
         if (dbEntry) { return next() }
 
@@ -236,10 +228,23 @@ function UploadAllNewFolders() {
 
         // Get the parent folder ID from remote database
         let lastFolder = await Database.FolderGet(parentPath)
+
         // If parent folder exists on database, pick its ID
         let lastFolderId = lastFolder && lastFolder.value && lastFolder.value.id
+
         // If the parent path is the root of the target path, get the root_folder_id from user info
         let parentId = parentPath === localPath ? userInfo.user.root_folder_id : lastFolderId
+
+        /*
+          En este punto nos encontramos con un dilema.
+          Si el usuario ha introducido un árbol complejo con subdirectorios,
+          nos podemos encontrar en la situación de que el padre del directorio que
+          queremos crear ahora mismo, ha sido creado recientemente por este mismo proceso.
+
+          Por tanto, aún no conocemos qué ID se le ha asignado en la base de datos.
+
+          Sin la ID del padre no podemos crear subdirectorios.
+        */
 
         if (parentPath === lastParentFolder) {
           parentId = lastParentId
@@ -250,7 +255,10 @@ function UploadAllNewFolders() {
 
         if (parentId) {
           Sync.RemoteCreateFolder(folderName, parentId).then(async (result) => {
+            result.isVirtual = true
+            // Save the new folder info into Folders DB to have its ID available
             await Database.FolderSet(item, result)
+            await Database.TempDel(item)
             lastParentId = result ? result.id : null
             lastParentFolder = result ? item : null
             next()

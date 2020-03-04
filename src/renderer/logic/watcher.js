@@ -16,32 +16,27 @@ function StartWatcher(path) {
   }
 
   // Declare the listeners of the watcher
-  watcher
-    .on('add', function(path) {
-      Logger.log('File', path, 'has been added')
-      database.TempSet(path, 'add')
-    })
-    .on('addDir', function(path) {
-      Logger.log('Directory', path, 'has been added')
-      database.TempSet(path, 'addDir')
-    })
-    .on('change', function(path) {
-      Logger.log('File', path, 'has been changed')
-      database.TempSet(path, 'add')
-    })
-    .on('unlink', function(path) {
-      Logger.log('File', path, 'has been removed')
-      database.TempSet(path, 'unlink')
-    })
-    .on('unlinkDir', function(path) {
-      Logger.log('Directory', path, 'has been removed')
-      database.TempSet(path, 'unlinkDir')
-    })
-    .on('error', function(error) {
+  watcher.on('add', function (path) {
+    Logger.log('File', path, 'has been added')
+    database.TempSet(path, 'add')
+  }).on('addDir', function (path) {
+    Logger.log('Directory', path, 'has been added')
+    database.TempSet(path, 'addDir')
+  }).on('change', function (path) {
+    Logger.log('File', path, 'has been changed')
+    database.TempSet(path, 'add')
+  }).on('unlink', function (path) {
+    Logger.log('File', path, 'has been removed')
+    database.TempSet(path, 'unlink')
+  }).on('unlinkDir', function (path) {
+    Logger.log('Directory', path, 'has been removed')
+    database.TempSet(path, 'unlinkDir')
+  })
+    .on('error', function (error) {
       Logger.log('Error happened', error)
     })
     .on('ready', onWatcherReady)
-    .on('raw', function(event, path, details) {
+    .on('raw', function (event, path, details) {
       // This event should be triggered everytime something happens.
       // Logger.log('Raw event info:', event, path, details)
     })

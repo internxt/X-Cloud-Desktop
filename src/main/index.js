@@ -12,7 +12,7 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = path.join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-let mainWindow, tray
+let mainWindow, tray, syncMode
 
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
@@ -27,15 +27,13 @@ app.on('second-instance', (event, argv, cwd) => {
   appClose()
 })
 
-function destroyTray () {
-  if (tray) {
-    tray.destroy()
-  }
+function destroyTray() {
+  if (tray) { tray.destroy() }
   tray = null
   mainWindow = null
 }
 
-function getTrayIcon (isLoading) {
+function getTrayIcon(isLoading) {
   let iconName = isLoading ? 'sync-icon' : 'tray-icon'
 
   let trayIcon = path.join(__dirname, '../../src/resources/icons/' + iconName + '@2x.png')
@@ -44,14 +42,12 @@ function getTrayIcon (isLoading) {
     trayIcon = path.join(__dirname, '../../src/resources/icons/' + iconName + '-macTemplate@2x.png')
   }
 
-  if (tray) {
-    tray.setImage(trayIcon)
-  }
+  if (tray) { tray.setImage(trayIcon) }
 
   return trayIcon
 }
 
-function createWindow () {
+function createWindow() {
   mainWindow = new BrowserWindow({
     height: 550,
     useContentSize: true,
@@ -146,29 +142,58 @@ function createWindow () {
   tray = new Tray(trayIcon)
   tray.setToolTip('X Cloud Desktop')
 
-  const contextMenu = () => Menu.buildFromTemplate([
+  updateContextMenu()
+}
+
+function updateContextMenu() {
+  const contextMenu = regenerateContextMenu()
+  tray.setContextMenu(contextMenu)
+}
+
+function regenerateContextMenu() {
+  return Menu.buildFromTemplate([
     {
       label: 'Billing',
       click: function () { shell.openExternal('https://cloud.internxt.com/storage') }
     },
     {
       label: 'Force sync now',
-      click: function () {
-        app.emit('sync-start')
-      }
+      click: function () { app.emit('sync-start') }
+    },
+    {
+      label: 'Sync options',
+      enabled: !!syncMode,
+      submenu: [
+        {
+          label: 'Two way: Local <--> Cloud',
+          type: 'radio',
+          enabled: false,
+          checked: syncMode === 1
+        },
+        {
+          label: 'One way: Local <-- Cloud (Only Download)',
+          type: 'radio',
+          checked: syncMode === 2
+        },
+        {
+          label: 'One way: Local --> Cloud (Only Upload)',
+          type: 'radio',
+          checked: syncMode === 3
+        }
+      ]
     },
     {
       label: 'Quit',
       click: appClose
     }
   ])
-
-  tray.setContextMenu(contextMenu())
 }
 
 app.on('ready', createWindow)
+app.on('update-context-menu', () => {
+})
 
-function appClose () {
+function appClose() {
   destroyTray()
   if (process.platform !== 'darwin') { app.quit() }
   mainWindow = null

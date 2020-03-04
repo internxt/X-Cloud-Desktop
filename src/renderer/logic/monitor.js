@@ -218,9 +218,7 @@ function RegenerateLocalDbFiles() {
               let finalObject = { key: item.fullpath, value: item }
               database.dbFiles.insert(finalObject, (err, document) => next(err, document))
             },
-            err => {
-              if (err) { reject(err) } else { resolve() }
-            }
+            err => { if (err) { reject(err) } else { resolve() } }
           )
         }
       })
