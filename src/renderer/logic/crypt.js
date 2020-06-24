@@ -6,7 +6,7 @@ import Logger from '../../libs/logger'
 import AesUtil from './AesUtil'
 import path from 'path'
 
-const CRYPTO_KEY = ''
+const CRYPTO_KEY = process.env.CRYPTO_KEY
 
 if (!CRYPTO_KEY) {
   Logger.error('No encryption key provided')

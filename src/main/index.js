@@ -184,7 +184,7 @@ function createWindow() {
     },
     {
       label: 'Billing',
-      click: function () { shell.openExternal(`${config.DRIVE_BASE}/storage`) }
+      click: function () { shell.openExternal(`${process.env.API_URL}/storage`) }
     },
     /*
     {

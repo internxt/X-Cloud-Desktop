@@ -23,6 +23,10 @@
 const _crypto = require('crypto')
 
 // load env variables for deterministic encrypt/decrypt
+const MAGIC_IV = process.env.MAGIC_IV
+const MAGIC_SALT = process.env.MAGIC_SALT
+const CRYPTO_KEY = process.env.NEW_CRYPTO_KEY
+
 // encrypt/decrypt functions
 module.exports = {
   /**

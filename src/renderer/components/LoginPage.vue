@@ -49,7 +49,7 @@
           Don't have an Internxt account?
           <a
             href="#"
-            @click="open(`${DRIVE_BASE}/new`)"
+            @click="open(`${process.env.API_URL}/new`)"
           >Get one for free!</a>
         </div>
       </div>
@@ -63,7 +63,6 @@ import crypt from '../logic/crypt'
 import { remote } from 'electron'
 import fs from 'fs'
 import Logger from '../../libs/logger'
-import config from '../../config'
 import path from 'path'
 import packageConfig from '../../../package.json'
 
@@ -82,7 +81,6 @@ export default {
       showTwoFactor: false,
       twoFactorCode: '',
       isLoading: false,
-      DRIVE_BASE: config.DRIVE_BASE,
       version: packageConfig.version
     }
   },
@@ -133,7 +131,7 @@ export default {
     },
     doLogin() {
       this.$data.isLoading = true
-      fetch(`${config.DRIVE_API}/login`, {
+      fetch(`${process.env.API_URL}/api/login`, {
         method: 'POST',
         mode: 'cors',
         headers: { 'content-type': 'application/json' },
@@ -164,7 +162,7 @@ export default {
       const pwd = crypt.HashPassword(this.$data.password, salt)
       const encryptedHash = crypt.Encrypt(pwd.hash.toString())
 
-      fetch(`${config.DRIVE_API}/access`, {
+      fetch(`${process.env.API_URL}/api/access`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json'
