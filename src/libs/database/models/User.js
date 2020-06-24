@@ -20,6 +20,9 @@ module.exports = {
     },
     root_folder_id: {
       type: 'int'
+    },
+    path: {
+      type: 'text'
     }
   }
 }

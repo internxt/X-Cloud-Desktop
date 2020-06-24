@@ -123,7 +123,7 @@ export default {
         fs.mkdirSync(rootFolderPath)
       }
 
-      return null
+      return rootFolderPath
     },
     doLogin() {
       this.$data.isLoading = true
@@ -186,14 +186,15 @@ export default {
             }
           } else {
             res.data.user.email = this.$data.username.toLowerCase()
-            this.CreateRootFolder()
+            const xPath = this.CreateRootFolder()
 
             const userInfo = {
               email: res.data.user.email,
               mnemonic: res.data.user.mnemonic,
               root_folder_id: res.data.user.root_folder_id,
               userId: res.data.user.userId,
-              token: res.data.token
+              token: res.data.token,
+              path: xPath
             }
 
             GetInstance().then(conn => {
