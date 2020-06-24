@@ -4,6 +4,7 @@
       <div class="spinner-grow text-primary" role="status">
         <span class="sr-only">Loading...</span>
       </div>
+      <div>Hola {{ envTest }}</div>
     </main>
   </div>
 </template>
@@ -12,15 +13,18 @@
 import async from 'async'
 import Logger from '../../libs/logger'
 import fs from 'fs'
+import { remote } from 'electron'
 
 export default {
   name: 'landing-page',
   components: {},
   beforeCreate() {
+    remote.app.emit('window-show')
   },
   data: function() {
     return {
-      dbFolder: ''
+      dbFolder: '',
+      envTest: process.env.CRYPTO_KEY
     }
   },
   created: function() {
