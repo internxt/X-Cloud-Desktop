@@ -11,11 +11,6 @@ export default new Router({
       component: require('@/components/LoginPage').default
     },
     {
-      path: '/config',
-      name: 'config-page',
-      component: require('@/components/ConfigPage').default
-    },
-    {
       path: '/xcloud',
       name: 'xcloud-page',
       component: require('@/components/XCloudPage').default

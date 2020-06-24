@@ -60,7 +60,6 @@
 
 <script>
 import crypt from '../logic/crypt'
-import database from '../../database/index'
 import { remote } from 'electron'
 import fs from 'fs'
 import Logger from '../../libs/logger'
@@ -112,15 +111,6 @@ export default {
       }
       return !this.$data.username || !this.$data.password
     },
-    // savePathAndLogin () {
-    //   database.Set('xPath', this.$data.storagePath).then(() => {
-    //     this.doLogin()
-    //   }).catch(err => {
-    //     this.$data.isLoading = false
-    //     Logger.error(err)
-    //     alert(err)
-    //   })
-    // },
     CreateRootFolder(folderName = ROOT_FOLDER_NAME, n = 0) {
       const rootFolderName = folderName + (n ? ` (${n})` : '')
       const rootFolderPath = path.join(HOME_FOLDER_PATH, rootFolderName)
@@ -139,7 +129,7 @@ export default {
         fs.mkdirSync(rootFolderPath)
       }
 
-      return database.Set('xPath', rootFolderPath)
+      return null
     },
     doLogin() {
       this.$data.isLoading = true
@@ -203,11 +193,6 @@ export default {
           } else {
             res.data.user.email = this.$data.username.toLowerCase()
             this.CreateRootFolder()
-            await database.Set(
-              'xMnemonic',
-              crypt.DecryptWithKey(res.data.user.mnemonic, this.$data.password)
-            )
-            await database.Set('xUser', res.data)
             this.$router.push('/landing-page')
           }
         })

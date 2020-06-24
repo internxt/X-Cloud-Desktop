@@ -12,9 +12,6 @@
         <a href="#" @click="forceSync()">Force sync</a>
       </div>
       <div>
-        <a href="#" @click="logout()">Log out</a>
-      </div>
-      <div>
         Path:
         <a href="#" @click="openFolder()">{{this.$data.localPath}}</a>
       </div>
@@ -28,10 +25,6 @@ import path from 'path'
 import temp from 'temp'
 import fs, { existsSync } from 'fs'
 import async from 'async'
-import database from '../../database/index'
-import Sync from '../logic/sync'
-import Tree from '../logic/tree'
-import Monitor from '../logic/monitor'
 import { remote } from 'electron'
 import Logger from '../../libs/logger'
 import PackageJson from '../../../package.json'
@@ -54,32 +47,8 @@ export default {
   },
   created: function() {
     this.$app = this.$electron.remote.app
-    Monitor.Monitor(true)
     this.getLocalFolderPath()
     this.getCurrentEnv()
-
-    remote.app.on('set-tooltip', text => {
-      this.toolTip = text
-    })
-
-    remote.app.on('user-logout', () => {
-      database
-        .ClearAll()
-        .then(() => {
-          Logger.info('databases cleared due to log out')
-          database
-            .ClearUser()
-            .then(() => {
-              this.$router.push('/')
-            })
-            .catch(err => {
-              Logger.error('ERROR CLEARING USER', err)
-            })
-        })
-        .catch(() => {
-          Logger.error('ERROR CLEARING ALL')
-        })
-    })
   },
   methods: {
     quitApp() {
@@ -102,15 +71,6 @@ export default {
     },
     getUser() {},
     getLocalFolderPath() {
-      database
-        .Get('xPath')
-        .then(path => {
-          this.$data.localPath = path
-        })
-        .catch(err => {
-          console.error(err)
-          this.$data.localPath = 'error'
-        })
     },
     getCurrentEnv() {
       this.$data.currentEnv = process.env.NODE_ENV
