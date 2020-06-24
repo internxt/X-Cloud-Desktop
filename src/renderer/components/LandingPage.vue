@@ -14,6 +14,7 @@ import Logger from '../../libs/logger'
 import fs from 'fs'
 import { remote } from 'electron'
 import checkEnvVars from '../../libs/envs'
+import GetInstance from '../../libs/database'
 
 export default {
   name: 'landing-page',
@@ -27,15 +28,22 @@ export default {
     }
   },
   created: function() {
+    console.log('Checking env vars')
     if (!checkEnvVars()) {
       alert('Failed to load ENV vars')
     } else {
-      this.$router.push('/login')
+      GetInstance().then(con => {
+        con.User.find().then(results => {
+          if (results.length === 0) {
+            this.$router.push('/login')
+          } else {
+            this.$router.push('/xcloud')
+          }
+        })
+      })
     }
   },
-  methods: {
-
-  }
+  methods: {}
 }
 </script>
 

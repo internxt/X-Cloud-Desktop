@@ -65,14 +65,19 @@ import fs from 'fs'
 import Logger from '../../libs/logger'
 import path from 'path'
 import packageConfig from '../../../package.json'
+import Constants from '../../libs/constants'
+import GetInstance from '../../libs/database'
 
 const ROOT_FOLDER_NAME = 'Internxt Drive'
-const HOME_FOLDER_PATH = remote.app.getPath('home')
+const HOME_FOLDER_PATH = 'D:'
 
 export default {
   name: 'login-page',
   beforeCreate() {
     remote.app.emit('window-show')
+  },
+  created() {
+    console.log('created LOGIN')
   },
   data() {
     return {
@@ -86,15 +91,6 @@ export default {
   },
   components: {},
   methods: {
-    open(link) {
-      this.$electron.shell.openExternal(link)
-    },
-    // selectFolder () {
-    //   var path = remote.dialog.showOpenDialog({ properties: ['openDirectory'] })
-    //   if (path && path[0]) {
-    //     this.$data.storagePath = path[0]
-    //   }
-    // },
     isEmptyFolder(path) {
       if (!fs.existsSync(path)) {
         return true
@@ -191,7 +187,20 @@ export default {
           } else {
             res.data.user.email = this.$data.username.toLowerCase()
             this.CreateRootFolder()
-            this.$router.push('/landing-page')
+
+            const userInfo = {
+              email: res.data.user.email,
+              mnemonic: res.data.user.mnemonic,
+              root_folder_id: res.data.user.root_folder_id,
+              userId: res.data.user.userId,
+              token: res.data.token
+            }
+
+            GetInstance().then(conn => {
+              conn.User.insert(userInfo).then(() => {
+                this.$router.push('/')
+              })
+            })
           }
         })
         .catch(err => {
@@ -312,5 +321,4 @@ footer {
   font-size: 14px;
   margin: 20px;
 }
-
 </style>

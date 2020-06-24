@@ -12,6 +12,9 @@
         <a href="#" @click="forceSync()">Force sync</a>
       </div>
       <div>
+        <a href="#" @click="logout()">Log out</a>
+      </div>
+      <div>
         Path:
         <a href="#" @click="openFolder()">{{this.$data.localPath}}</a>
       </div>
@@ -28,6 +31,7 @@ import async from 'async'
 import { remote } from 'electron'
 import Logger from '../../libs/logger'
 import PackageJson from '../../../package.json'
+import GetInstance from '../../libs/database'
 
 export default {
   name: 'xcloud-page',
@@ -42,7 +46,8 @@ export default {
   },
   components: {},
   beforeCreate() {
-    remote.app.emit('window-hide')
+    console.log('before create')
+    remote.app.emit('window-show')
     Logger.info('User platform: %s %s, version: %s', process.platform, process.arch, PackageJson.version)
   },
   created: function() {
@@ -56,9 +61,6 @@ export default {
     },
     openFolder() {
       remote.app.emit('open-folder')
-    },
-    logout() {
-      remote.app.emit('user-logout')
     },
     forceSync() {
       remote.app.emit('sync-start')
@@ -74,6 +76,18 @@ export default {
     },
     getCurrentEnv() {
       this.$data.currentEnv = process.env.NODE_ENV
+    },
+    logout() {
+      GetInstance().then(conn => {
+        conn.User.find().then(result => {
+          console.log(result)
+        })
+        conn.clearAll().then(() => {
+          this.$router.push('/')
+        })
+      }).catch(err => {
+        alert('Error logging out: ' + err.message)
+      })
     }
   }
 }
