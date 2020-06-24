@@ -4,7 +4,6 @@ import { app, BrowserWindow, Tray, Menu, shell } from 'electron'
 import path from 'path'
 import Logger from '../libs/logger'
 import AutoLaunch from 'auto-launch'
-import config from '../config'
 import { autoUpdater } from 'electron-updater'
 
 var autoLaunch = new AutoLaunch({

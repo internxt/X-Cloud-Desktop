@@ -4,7 +4,6 @@
       <div class="spinner-grow text-primary" role="status">
         <span class="sr-only">Loading...</span>
       </div>
-      <div>Hola {{ envTest }}</div>
     </main>
   </div>
 </template>
@@ -14,6 +13,7 @@ import async from 'async'
 import Logger from '../../libs/logger'
 import fs from 'fs'
 import { remote } from 'electron'
+import checkEnvVars from '../../libs/envs'
 
 export default {
   name: 'landing-page',
@@ -23,12 +23,15 @@ export default {
   },
   data: function() {
     return {
-      dbFolder: '',
-      envTest: process.env.CRYPTO_KEY
+      dbFolder: ''
     }
   },
   created: function() {
-    console.log('Hola', process.env.CRYPTO_KEY)
+    if (!checkEnvVars()) {
+      alert('Failed to load ENV vars')
+    } else {
+      this.$router.push('/login')
+    }
   },
   methods: {
 
