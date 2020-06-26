@@ -69,7 +69,7 @@ import Constants from '../../libs/constants'
 import GetInstance from '../../libs/database'
 
 const ROOT_FOLDER_NAME = 'Internxt Drive'
-const HOME_FOLDER_PATH = 'D:'
+const HOME_FOLDER_PATH = remote.app.getPath('home')
 
 export default {
   name: 'login-page',
@@ -120,7 +120,11 @@ export default {
       }
 
       if (!exist) {
-        fs.mkdirSync(rootFolderPath)
+        try {
+          fs.mkdirSync(rootFolderPath)
+        } catch (e) {
+          alert('Cannot create folder ' + rootFolderPath)
+        }
       }
 
       return rootFolderPath

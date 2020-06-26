@@ -32,12 +32,12 @@ class Credentials {
   getHeaders(withAuth = false, withMnemonic = false) {
     const headers = {}
 
-    headers['content-type'] = 'application/json; charset=utf-8'
+    headers['Content-Type'] = 'application/json; charset=utf-8'
     headers['internxt-version'] = PackageJson.version
     headers['internxt-client'] = 'drive-desktop'
 
     if (withAuth) {
-      headers['authorization'] = `Bearer ${this.token}`
+      headers['Authorization'] = `Bearer ${this.token}`
     }
 
     if (withMnemonic) {

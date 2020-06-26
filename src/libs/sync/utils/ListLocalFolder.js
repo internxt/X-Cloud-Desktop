@@ -4,7 +4,7 @@ function ListLocalFolder(folderPath) {
   let results = []
   return new Promise(resolve => {
     readdirp(folderPath, {
-      type: 'all', alwaysStat: true
+      type: 'all', alwaysStat: true, lstat: true
     }).on('data', (entry) => {
       results.push(entry)
     }).on('warn', entry => {

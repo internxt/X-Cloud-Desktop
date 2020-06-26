@@ -10,6 +10,13 @@ async function ExistsRequest(path, mkdirp = false, isFile = true) {
       mkdirp: mkdirp,
       isFile: isFile
     })
+  }).then(async res => {
+    try {
+      const data = await res.json()
+      return { res, data }
+    } catch (e) {
+      return { res }
+    }
   })
 
   return req
