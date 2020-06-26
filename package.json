@@ -105,6 +105,7 @@
     "mkdirp": "^1.0.3",
     "nedb": "^1.8.0",
     "popper.js": "^1.15.0",
+    "readdirp": "^3.4.0",
     "rimraf": "^3.0.0",
     "sqlite3": "^4.2.0",
     "storj": "internxt/node-lib",
