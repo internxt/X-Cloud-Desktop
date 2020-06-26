@@ -12,3 +12,4 @@ thumbs.db
 .env
 database_*.db
 database_*.db~
+.internxt-drive/

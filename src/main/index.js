@@ -185,14 +185,12 @@ function createWindow() {
       label: 'Billing',
       click: function () { shell.openExternal(`${process.env.API_URL}/storage`) }
     },
-    /*
     {
       label: 'Log out',
       click: function () {
         app.emit('user-logout')
       }
     },
-    */
     {
       label: 'Quit',
       click: appClose

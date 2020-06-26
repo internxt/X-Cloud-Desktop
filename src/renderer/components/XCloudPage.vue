@@ -12,6 +12,9 @@
         <a href="#" @click="forceSync()">Force sync</a>
       </div>
       <div>
+        Tray icon: <a href="#" @click="changeTrayIconOn()">on</a> - <a href="#" @click="changeTrayIconOff()">off</a>
+      </div>
+      <div>
         <a href="#" @click="logout()">Log out</a>
       </div>
       <div>
@@ -32,6 +35,8 @@ import { remote } from 'electron'
 import Logger from '../../libs/logger'
 import PackageJson from '../../../package.json'
 import GetInstance from '../../libs/database'
+import OneWayUpload from '../../libs/sync/OneWayUpload'
+import Credentials from '../../libs/sync/utils/Credentials'
 
 export default {
   name: 'xcloud-page',
@@ -46,14 +51,18 @@ export default {
   },
   components: {},
   beforeCreate() {
-    console.log('before create')
     remote.app.emit('window-show')
     Logger.info('User platform: %s %s, version: %s', process.platform, process.arch, PackageJson.version)
   },
-  created: function() {
+  created: async function() {
     this.$app = this.$electron.remote.app
     this.getLocalFolderPath()
     this.getCurrentEnv()
+    await Credentials.init()
+    const sync = new OneWayUpload()
+    sync.init().then(() => {
+      sync.start()
+    })
   },
   methods: {
     quitApp() {
