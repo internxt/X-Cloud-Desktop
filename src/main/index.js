@@ -1,10 +1,12 @@
 'use strict'
 
 import { app, BrowserWindow, Tray, Menu, shell } from 'electron'
+import fs from 'fs'
 import path from 'path'
 import Logger from '../libs/logger'
 import AutoLaunch from 'auto-launch'
 import { autoUpdater } from 'electron-updater'
+import Credentials from '../libs/sync/utils/Credentials'
 
 var autoLaunch = new AutoLaunch({
   name: 'Internxt Drive'
@@ -171,8 +173,9 @@ function createWindow() {
   const contextMenu = () => Menu.buildFromTemplate([
     {
       label: 'Open folder',
-      click: function () {
-        app.emit('open-folder')
+      click: async function () {
+        await Credentials.init()
+        app.emit('open-item', Credentials.path)
       }
     },
     {
@@ -300,4 +303,10 @@ app.on('ready', () => {
   setInterval(() => {
     checkUpdates()
   }, 1000 * 60 * 60 * 6)
+})
+
+app.on('open-item', (folderPath) => {
+  if (fs.existsSync(folderPath)) {
+    shell.openItem(folderPath)
+  }
 })

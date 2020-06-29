@@ -11,6 +11,9 @@ class OneWayUpload extends SyncInterface {
     super()
     this.initialized = false
     this.user = null
+    this.syncTotal = 0
+    this.syncCurrent = 0
+    this.forceStop = false
   }
 
   async init() {
@@ -22,8 +25,16 @@ class OneWayUpload extends SyncInterface {
     })
   }
 
+  stillAlive() {
+    if (this.forceStop) {
+      throw new Error('Sync stop')
+    }
+    return true
+  }
+
   async start() {
     if (!this.initialized) { return }
+    this.forceStop = false
     return async.waterfall([
       next => {
         SyncUtils.ListLocalFolder(this.user.path).then(result => {
@@ -49,6 +60,8 @@ class OneWayUpload extends SyncInterface {
         next(null, noSymLinks)
       },
       (folderList, next) => {
+        this.syncTotal = folderList.length
+        this.syncCurrent = 0
         // Sort items
         folderList.sort((itemA, itemB) => {
           if (itemA.isFile === itemB.isFile) {
@@ -63,14 +76,16 @@ class OneWayUpload extends SyncInterface {
         })
 
         folderList.forEach(item => {
+          this.syncCurrent++
           if (item.isFile) {
             const relativePath = path.relative(this.user.path, path.dirname(item.fullPath))
             console.log('Relative Path', relativePath)
             SyncUtils.CreateFolders(relativePath).then(result => {
-              // console.log(result)
+              console.error('UPLOAD', item.fullPath)
+              SyncUtils.UploadFile('a', result)
             })
           } else {
-            SyncUtils.CheckFolderExists(item.path).then(r => {
+            SyncUtils.CreateFolders(item.path).then(r => {
               console.log('Result:', r)
             }).catch(err => {
               console.log('Error:', err)
@@ -80,6 +95,10 @@ class OneWayUpload extends SyncInterface {
       }
     ], err => {
       if (err) {
+        if (this.forceStop) {
+          console.log('Sync stopped by user')
+          this.forceStop = true
+        }
         console.log('One Way Sync failed')
       } else {
         console.log('FIN')

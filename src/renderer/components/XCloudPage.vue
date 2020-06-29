@@ -31,7 +31,7 @@ import path from 'path'
 import temp from 'temp'
 import fs, { existsSync } from 'fs'
 import async from 'async'
-import { remote } from 'electron'
+import { remote, dialog } from 'electron'
 import Logger from '../../libs/logger'
 import PackageJson from '../../../package.json'
 import GetInstance from '../../libs/database'
@@ -59,6 +59,7 @@ export default {
     this.getLocalFolderPath()
     this.getCurrentEnv()
     await Credentials.init()
+    this.localPath = Credentials.path
     const sync = new OneWayUpload()
     sync.init().then(() => {
       sync.start()
@@ -69,7 +70,7 @@ export default {
       remote.getCurrentWindow().close()
     },
     openFolder() {
-      remote.app.emit('open-folder')
+      remote.app.emit('open-item', Credentials.path)
     },
     forceSync() {
       remote.app.emit('sync-start')
@@ -86,11 +87,8 @@ export default {
     getCurrentEnv() {
       this.$data.currentEnv = process.env.NODE_ENV
     },
-    logout() {
+    async logout() {
       GetInstance().then(conn => {
-        conn.User.find().then(result => {
-          console.log(result)
-        })
         conn.clearAll().then(() => {
           this.$router.push('/')
         })

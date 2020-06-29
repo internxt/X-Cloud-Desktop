@@ -66,9 +66,7 @@ const INSTANCE = new Database()
 
 function GetInstance() {
   if (!INSTANCE.connectCall) {
-    console.log('Connecting')
     return INSTANCE.connect().then(() => {
-      console.log('After connection')
       return Promise.resolve(INSTANCE)
     })
   } else {

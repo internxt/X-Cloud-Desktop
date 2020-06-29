@@ -8,9 +8,9 @@ function ListLocalFolder(folderPath) {
     }).on('data', (entry) => {
       results.push(entry)
     }).on('warn', entry => {
-      console.log('WARNING', entry)
+      console.log('READDIRP WARNING', entry)
     }).on('error', (err) => {
-      console.log('error', err.message)
+      console.log('READDIRP ERROR', err.message)
     }).on('end', () => {
       resolve(results)
     })

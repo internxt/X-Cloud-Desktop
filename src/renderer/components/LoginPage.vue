@@ -194,7 +194,7 @@ export default {
 
             const userInfo = {
               email: res.data.user.email,
-              mnemonic: res.data.user.mnemonic,
+              mnemonic: crypt.DecryptWithKey(res.data.user.mnemonic, this.$data.password),
               root_folder_id: res.data.user.root_folder_id,
               userId: res.data.user.userId,
               token: res.data.token,

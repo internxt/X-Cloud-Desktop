@@ -7,6 +7,7 @@ class Credentials {
     this.userId = null
     this.token = null
     this.mnemonic = null
+    this.path = null
     this.initialized = false
   }
 
@@ -21,6 +22,7 @@ class Credentials {
         this.userId = user.userId
         this.token = user.token
         this.mnemonic = user.mnemonic
+        this.path = user.path
         this.initialized = true
       }).catch(err => {
         console.log('Error initializing Credentials', err.message)
