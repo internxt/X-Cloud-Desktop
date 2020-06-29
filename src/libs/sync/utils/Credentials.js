@@ -1,5 +1,6 @@
 import PackageJson from '../../../../package.json'
 import GetInstance from '../../database'
+import CheckFileExists from './CheckFileExists'
 
 class Credentials {
   constructor() {
@@ -8,25 +9,35 @@ class Credentials {
     this.token = null
     this.mnemonic = null
     this.path = null
+    this.rootBucket = null
     this.initialized = false
   }
 
   /**
    * Init credentials
    */
-  init() {
+  async init() {
     return GetInstance().then(Database => {
+      console.log('INIT CREDENTIALS')
       return Database.User.find().then(results => {
         const user = results[0]
+
+        // Save
         this.user = user.email
         this.userId = user.userId
         this.token = user.token
         this.mnemonic = user.mnemonic
         this.path = user.path
+
+        // Initialized
         this.initialized = true
-      }).catch(err => {
-        console.log('Error initializing Credentials', err.message)
-        this.initialized = false
+        return user
+      }).then(user => {
+        return CheckFileExists.CheckFolderExists('.').then(result => {
+          if (result.data.isRoot) {
+            this.rootBucket = result.data.path.bucket
+          }
+        })
       })
     })
   }

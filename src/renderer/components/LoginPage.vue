@@ -1,60 +1,56 @@
 <template>
   <div id="wrapper">
-    <div class="close-button">
-      <button @click="closeApp()">
-        <img src="~@/../resources/icons/close.png" />
-      </button>
-    </div>
-    <main class="centered-container">
-      <div class="login-container-box">
-        <div class="login-title">
-          <img src="~@/../resources/icons/logo.svg" />
-          {{showTwoFactor ? 'Security Verification' : 'Sign in to Internxt'}}
-        </div>
-        <div v-if="!showTwoFactor">
-          <input class="form-control" v-model="username" type="text" placeholder="Email address" />
-          <input class="form-control" v-model="password" type="password" placeholder="Password" />
-          <!-- <div class="form-control-file">
-            <input
-              class="form-control"
-              v-model="storagePath"
-              :disabled="true"
-              type="text" placeholder="Select an empty folder" />
-            <div class="form-control-fake-file"  @click="selectFolder()"></div>
-          </div>-->
-          <!-- <p
-            v-if="storagePath && !isEmptyFolder(storagePath)"
-            class="form-error">
-              This folder is not empty
-          </p>-->
-        </div>
-        <div v-if="showTwoFactor">
-          <div>Enter your 6 digit authenticator code below</div>
-          <input
-            class="form-control"
-            v-model="twoFactorCode"
-            type="text"
-            placeholder="Authentication code"
-          />
-        </div>
-        <input
-          class="form-control btn-block btn-primary"
-          type="submit"
-          :disabled="checkForm()"
-          @click="doLogin()"
-          value="Sign in"
-        />
-
-        <div v-if="!showTwoFactor" class="create-account-container">
-          Don't have an Internxt account?
-          <a
-            href="#"
-            @click="open(`${process.env.API_URL}/new`)"
-          >Get one for free!</a>
-        </div>
+    <div class="login-container">
+      <div class="close-button">
+        <button @click="closeApp()">
+          <img src="~@/../resources/icons/close.png" />
+        </button>
       </div>
-    </main>
-    <footer>v{{version}}</footer>
+      <main class="centered-container">
+        <div class="login-container-box">
+          <div class="login-title">
+            <img src="~@/../resources/icons/logo.svg" />
+            {{showTwoFactor ? 'Security Verification' : 'Sign in to Internxt'}}
+          </div>
+          <form>
+            <div v-if="!showTwoFactor">
+              <input
+                class="form-control"
+                v-model="username"
+                type="text"
+                placeholder="Email address"
+              />
+              <input class="form-control" v-model="password" type="password" placeholder="Password" />
+            </div>
+            <div v-if="showTwoFactor">
+              <div>Enter your 6 digit authenticator code below</div>
+              <input
+                class="form-control"
+                v-model="twoFactorCode"
+                type="text"
+                placeholder="Authentication code"
+              />
+            </div>
+            <input
+              class="form-control btn-block btn-primary"
+              type="submit"
+              :disabled="checkForm()"
+              @click="doLogin()"
+              value="Sign in"
+            />
+          </form>
+
+          <div v-if="!showTwoFactor" class="create-account-container">
+            Don't have an Internxt account?
+            <a
+              href="#"
+              @click="open(`${process.env.API_URL}/new`)"
+            >Get one for free!</a>
+          </div>
+        </div>
+      </main>
+      <footer>v{{version}}</footer>
+    </div>
   </div>
 </template>
 
@@ -194,7 +190,10 @@ export default {
 
             const userInfo = {
               email: res.data.user.email,
-              mnemonic: crypt.DecryptWithKey(res.data.user.mnemonic, this.$data.password),
+              mnemonic: crypt.DecryptWithKey(
+                res.data.user.mnemonic,
+                this.$data.password
+              ),
               root_folder_id: res.data.user.root_folder_id,
               userId: res.data.user.userId,
               token: res.data.token,
@@ -224,106 +223,109 @@ export default {
 @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro');
 
 @font-face {
-  font-family: 'CerebriSans-Regular';
-  src: url('../../resources/fonts/CerebriSans-Regular.ttf');
+    font-family: 'CerebriSans-Regular';
+    src: url('../../resources/fonts/CerebriSans-Regular.ttf');
 }
 
 #wrapper {
-  height: 100%;
-  -webkit-app-region: drag;
+    height: 100%;
+    -webkit-app-region: drag;
+}
 
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
+.login-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .centered-container {
-  -webkit-app-region: no-drag;
-  font-family: 'CerebriSans-Regular';
+    -webkit-app-region: no-drag;
+    font-family: 'CerebriSans-Regular';
 }
 
 .logo {
-  width: 50px;
-  display: block;
+    width: 50px;
+    display: block;
 }
 
 .form-control {
-  margin-top: 15px;
-  height: 50px !important;
+    margin-top: 15px;
+    height: 50px !important;
 }
 
 .btn-primary {
-  margin-top: 39px !important;
-  background-color: #4585f5 !important;
-  font-weight: bold !important;
-  outline: none;
+    margin-top: 39px !important;
+    background-color: #4585f5 !important;
+    font-weight: bold !important;
+    outline: none;
 }
 
 .btn-primary:disabled {
-  border: solid 0px;
+    border: solid 0px;
 }
 
 .login-container-box {
-  background-color: #fff;
-  width: 472px !important;
-  padding: 40px !important;
+    background-color: #fff;
+    width: 472px !important;
+    padding: 40px !important;
 }
 
 .login-title {
-  font-size: 25px;
-  font-weight: 600;
-  margin-bottom: 20px;
+    font-size: 25px;
+    font-weight: 600;
+    margin-bottom: 20px;
 }
 
 .login-title img {
-  width: 25px;
-  margin-right: 10px;
-  margin-bottom: 5px;
+    width: 25px;
+    margin-right: 10px;
+    margin-bottom: 5px;
 }
 
 .create-account-container {
-  margin-top: 39px;
-  color: #909090;
+    margin-top: 39px;
+    color: #909090;
 }
 
 input[type='text']:disabled {
-  background-color: white !important;
+    background-color: white !important;
 }
 
 input[type='submit']:disabled {
-  background-color: #7aa5ee !important;
+    background-color: #7aa5ee !important;
 }
 
 .form-error {
-  color: red;
-  font-size: 13px;
-  margin: 0px;
+    color: red;
+    font-size: 13px;
+    margin: 0px;
 }
 
 .close-button {
-  align-self: flex-end;
-  opacity: 0;
+    align-self: flex-end;
+    opacity: 0.1;
 }
 
 .close-button button {
-  background-color: transparent;
-  border-width: 0px;
+    background-color: transparent;
+    border-width: 0px;
 }
 
 .close-button button:not(:disabled) {
-  cursor: default;
+    cursor: default;
 }
 
 .close-button button:focus {
-  border-width: 0px;
-  outline: none;
+    border-width: 0px;
+    outline: none;
 }
 
 footer {
-  color: #d0d0d0;
-  cursor: default;
-  font-size: 14px;
-  margin: 20px;
+    color: #d0d0d0;
+    cursor: default;
+    font-size: 14px;
+    margin: 20px;
 }
 </style>

@@ -49,7 +49,6 @@ export default {
 
 <style>
 #wrapper {
-  display: flex;
   justify-content: center;
 }
 </style>
