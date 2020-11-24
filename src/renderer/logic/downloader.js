@@ -13,6 +13,8 @@ import mkdirp from 'mkdirp'
 import sanitize from 'sanitize-filename'
 import Folder from './folder'
 import getEnvironment from './utils/libinxt'
+import {client, user} from './utils/analytics'
+import { event } from 'jquery'
 
 const app = electron.remote.app
 
@@ -43,6 +45,21 @@ function downloadFileTemp(fileObj, silent = false) {
         if (!silent) {
           let progressPtg = progress * 100
           progressPtg = progressPtg.toFixed(2)
+          client.track(
+            {
+              userId: user.getUser().uuid,
+              event: 'file-download-start',
+              properties: {
+                email: user.getUser().email,
+                file_id: fileObj.fileId,
+                file_name: fileObj.name,
+                folder_id: fileObj.folder_id,
+                file_type: fileObj.type,
+                mode: user.getSyncMode()
+              }
+
+            }
+          )
           app.emit('set-tooltip', 'Downloading ' + originalFileName + ' (' + progressPtg + '%).')
         } else {
           app.emit('set-tooltip', 'Checking ' + originalFileName)
