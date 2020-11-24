@@ -149,7 +149,20 @@ function _downloadAllFiles() {
             // when application and local folder are not in the same partition
             fs.copyFileSync(tempPath, item.fullpath)
             fs.unlinkSync(tempPath)
-            Sync.SetModifiedTime(item.fullpath, item.created_at).then(() => next(null)).catch(next)
+            Sync.SetModifiedTime(item.fullpath, item.created_at).then(() => {
+              client.track(
+                {
+                  userId: user.getUser().uuid,
+                  event: 'file-download-finished',
+                  properties: {
+                    email: user.getUser().email,
+                    file_id: item.fileId,
+                    mode: user.getSyncMode()
+                  }
+                }
+              )
+              next(null)
+            }).catch(next)
           }).catch(err => {
             // On error by shard, upload again
             Logger.error(err.message)
