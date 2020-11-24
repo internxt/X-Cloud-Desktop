@@ -75,6 +75,8 @@ import config from '../../config'
 import path from 'path'
 import packageConfig from '../../../package.json'
 
+import { client, user } from '../logic/utils/analytics'
+
 const ROOT_FOLDER_NAME = 'Internxt Drive'
 const HOME_FOLDER_PATH = remote.app.getPath('home')
 
@@ -157,6 +159,13 @@ export default {
         body: JSON.stringify({ email: this.$data.username })
       })
         .then(async (res) => {
+          client.track({
+            userId: user.getUser().uuid,
+            event: 'user-signin',
+            properties: {
+              email: user.getUser().email
+            }
+          })
           return { res, body: await res.json() }
         })
         .then((res) => {
