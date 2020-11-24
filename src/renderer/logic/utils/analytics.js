@@ -1,5 +1,5 @@
+import ConfigStore from '../../../main/config-store'
 const Analytics = require('analytics-node')
-
 const client = new Analytics(process.env.APP_SEGMENT_KEY)
 
 const user = {
@@ -7,7 +7,9 @@ const user = {
     email: undefined,
     uuid: undefined
   },
-
+  getSyncMode: function() {
+    return ConfigStore.get('syncMode')
+  },
   setUser: function (data) {
     this.userData.email = data.email
     this.userData.uuid = data.uuid
