@@ -1,7 +1,8 @@
 import database from '../../../database/index'
-
+import {client, user} from './analytics'
 async function GetAuthHeader(withMnemonic) {
   const userData = await database.Get('xUser')
+  user.setUser(userData.user)
   const header = {
     Authorization: `Bearer ${userData.token}`,
     'content-type': 'application/json; charset=utf-8'
