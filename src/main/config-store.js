@@ -8,6 +8,14 @@ const schema = {
   syncMode: {
     type: 'string',
     default: 'two-way'
+  },
+  limit: {
+    type: 'number',
+    default: -1
+  },
+  usage: {
+    type: 'number',
+    default: -1
   }
 }
 

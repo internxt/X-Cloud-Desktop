@@ -20,7 +20,7 @@ if (oldFolderExists && !newFolderExists) {
   rimraf.sync(OLD_DB_FOLDER)
 }
 
-const InitDatabase = () => {
+const initDatabase = () => {
   if (!fs.existsSync(DB_FOLDER)) {
     fs.mkdirSync(DB_FOLDER)
   }
@@ -192,7 +192,7 @@ const ClearLastFolders = () => {
   })
 }
 
-const CompactAllDatabases = () => {
+const compactAllDatabases = () => {
   dbFolders.persistence.compactDatafile()
   dbFiles.persistence.compactDatafile()
   dbTemp.persistence.compactDatafile()
@@ -201,7 +201,7 @@ const CompactAllDatabases = () => {
   dbUser.persistence.compactDatafile()
 }
 
-const BackupCurrentTree = () => {
+const backupCurrentTree = () => {
   return new Promise((resolve, reject) => {
     async.waterfall([
       next => {
@@ -278,9 +278,9 @@ export default {
   ClearLastFiles,
   ClearLastFolders,
   ClearAll,
-  CompactAllDatabases,
-  BackupCurrentTree,
+  compactAllDatabases,
+  backupCurrentTree,
   ClearUser,
   GetDatabaseFolder: DB_FOLDER,
-  InitDatabase
+  initDatabase
 }

@@ -15,7 +15,7 @@ const IgnoredFiles = [
   '^~.*'
 ]
 
-function GetListFromFolder(folderPath) {
+function getListFromFolder(folderPath) {
   return new Promise((resolve) => {
     const results = []
     readdirp(folderPath, {
@@ -36,7 +36,7 @@ function GetListFromFolder(folderPath) {
   })
 }
 
-function GetStat(filepath) {
+function getStat(filepath) {
   try {
     return fs.lstatSync(filepath)
   } catch (err) {
@@ -48,7 +48,7 @@ function _recursiveFolderToList(tree, basePath, currentPath = null) {
   let finalList = []
   return new Promise((resolve, reject) => {
     async.eachSeries(tree.children, async (item, next) => {
-      const decryptedName = crypt.DecryptName(item.name, item.parentId)
+      const decryptedName = crypt.decryptName(item.name, item.parentId)
       const fullNewPath = path.join(currentPath || basePath, decryptedName)
       finalList.push(fullNewPath)
       const subFolder = await _recursiveFolderToList(item, basePath, fullNewPath)
@@ -60,7 +60,7 @@ function _recursiveFolderToList(tree, basePath, currentPath = null) {
   })
 }
 
-function GetFolderListFromRemoteTree() {
+function getFolderListFromRemoteTree() {
   return new Promise(async (resolve, reject) => {
     const tree = await database.Get('tree')
     const basePath = await database.Get('xPath')
@@ -72,7 +72,7 @@ function _recursiveFolderObjectToList(tree, basePath, currentPath = null) {
   let finalList = []
   return new Promise((resolve, reject) => {
     async.eachSeries(tree.children, async (item, next) => {
-      const decryptedName = crypt.DecryptName(item.name, item.parentId)
+      const decryptedName = crypt.decryptName(item.name, item.parentId)
       const fullNewPath = path.join(currentPath || basePath, decryptedName)
       const cloneObject = JSON.parse(JSON.stringify(item))
       delete cloneObject.children
@@ -87,7 +87,7 @@ function _recursiveFolderObjectToList(tree, basePath, currentPath = null) {
   })
 }
 
-function GetFolderObjectListFromRemoteTree() {
+function getFolderObjectListFromRemoteTree() {
   return new Promise(async (resolve, reject) => {
     const tree = await database.Get('tree')
     const basePath = await database.Get('xPath')
@@ -101,13 +101,13 @@ function _recursiveFilesToList(tree, basePath, currentPath = null) {
   finalList.forEach(item => {
     const encryptedFileName = item.name
     const salt = item.folder_id
-    item.filename = crypt.DecryptName(encryptedFileName, salt)
+    item.filename = crypt.decryptName(encryptedFileName, salt)
     item.fullpath = path.join(currentPath || basePath, item.filename + (item.type ? '.' + item.type : ''))
   })
 
   return new Promise((resolve, reject) => {
     async.eachSeries(tree.children, async (item, next) => {
-      const decryptedName = crypt.DecryptName(item.name, item.parentId)
+      const decryptedName = crypt.decryptName(item.name, item.parentId)
       const fullNewPath = path.join(currentPath || basePath, decryptedName)
       const subFolder = await _recursiveFilesToList(item, basePath, fullNewPath)
       finalList = finalList.concat(subFolder)
@@ -118,7 +118,7 @@ function _recursiveFilesToList(tree, basePath, currentPath = null) {
   })
 }
 
-function GetFileListFromRemoteTree() {
+function getFileListFromRemoteTree() {
   return new Promise(async (resolve, reject) => {
     const tree = await database.Get('tree')
     const basePath = await database.Get('xPath')
@@ -126,7 +126,7 @@ function GetFileListFromRemoteTree() {
   })
 }
 
-function GetLocalFolderList(localPath) {
+function getLocalFolderList(localPath) {
   return new Promise((resolve) => {
     const results = []
     readdirp(localPath, {
@@ -142,15 +142,15 @@ function GetLocalFolderList(localPath) {
   })
 }
 
-function GetLocalFileList(localPath) {
-  return GetListFromFolder(localPath)
+function getLocalFileList(localPath) {
+  return getListFromFolder(localPath)
 }
 
 function getTree() {
   return new Promise((resolve, reject) => {
     database.Get('xUser').then(async userData => {
       fetch(`${process.env.API_URL}/api/storage/tree`, {
-        headers: await Auth.GetAuthHeader()
+        headers: await Auth.getAuthHeader()
       }).then(async res => {
         return { res, data: await res.json() }
       }).then(async res => {
@@ -175,9 +175,9 @@ function updateTree() {
   })
 }
 
-function RegenerateLocalDbFolders() {
+function regenerateLocalDbFolders() {
   return new Promise((resolve, reject) => {
-    GetFolderObjectListFromRemoteTree().then(list => {
+    getFolderObjectListFromRemoteTree().then(list => {
       database.dbFolders.remove({}, { multi: true }, (err, n) => {
         if (err) { reject(err) } else {
           async.eachSeries(list,
@@ -196,9 +196,9 @@ function RegenerateLocalDbFolders() {
   })
 }
 
-function RegenerateLocalDbFiles() {
+function regenerateLocalDbFiles() {
   return new Promise((resolve, reject) => {
-    GetFileListFromRemoteTree().then(list => {
+    getFileListFromRemoteTree().then(list => {
       database.dbFiles.remove({}, { multi: true }, (err, n) => {
         if (err) { reject(err) } else {
           async.eachSeries(list,
@@ -220,14 +220,14 @@ function RegenerateLocalDbFiles() {
   })
 }
 
-function RegenerateAndCompact() {
+function regenerateAndCompact() {
   return new Promise((resolve, reject) => {
     async.waterfall([
       next => updateTree().then(() => next()).catch(next),
-      next => RegenerateLocalDbFolders().then(() => next()).catch(next),
-      next => RegenerateLocalDbFiles().then(() => next()).catch(next)
+      next => regenerateLocalDbFolders().then(() => next()).catch(next),
+      next => regenerateLocalDbFiles().then(() => next()).catch(next)
     ], (err) => {
-      database.CompactAllDatabases()
+      database.compactAllDatabases()
       if (err) {
         reject(err)
       } else {
@@ -238,14 +238,14 @@ function RegenerateAndCompact() {
 }
 
 export default {
-  GetListFromFolder,
-  GetStat,
-  GetFolderListFromRemoteTree,
-  GetFileListFromRemoteTree,
-  GetFolderObjectListFromRemoteTree,
-  GetLocalFolderList,
-  GetLocalFileList,
+  getListFromFolder,
+  getStat,
+  getFolderListFromRemoteTree,
+  getFileListFromRemoteTree,
+  getFolderObjectListFromRemoteTree,
+  getLocalFolderList,
+  getLocalFileList,
   getTree,
   updateTree,
-  RegenerateAndCompact
+  regenerateAndCompact
 }

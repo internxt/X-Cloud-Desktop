@@ -15,5 +15,6 @@ async function GetAuthHeader(withMnemonic) {
 }
 
 export default {
-  GetAuthHeader
+  getAuthHeader,
+  getUserEmail
 }

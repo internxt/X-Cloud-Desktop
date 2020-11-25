@@ -9,7 +9,7 @@ import Tree from './tree'
 import fs from 'fs'
 import {client, user} from './utils/analytics'
 
-function FileInfoFromPath(localPath) {
+function infoFromPath(localPath) {
   return new Promise((resolve, reject) => {
     database.dbFiles.findOne({ key: localPath }, function (err, result) {
       if (err) { reject(err) } else { resolve(result) }
@@ -17,12 +17,12 @@ function FileInfoFromPath(localPath) {
   })
 }
 // BucketId and FileId must be the NETWORK ids (mongodb)
-function RemoveFile(bucketId, fileId) {
+function removeFile(bucketId, fileId) {
   return new Promise(async (resolve, reject) => {
     database.Get('xUser').then(async userData => {
       fetch(`${process.env.API_URL}/api/storage/bucket/${bucketId}/file/${fileId}`, {
         method: 'DELETE',
-        headers: await Auth.GetAuthHeader()
+        headers: await Auth.getAuthHeader()
       }).then(result => {
         resolve(result)
       }).catch(err => {
@@ -35,7 +35,7 @@ function RemoveFile(bucketId, fileId) {
 
 // Create entry in Drive Server linked to the Bridge file
 // Create entry in Drive Server linked to the Bridge file
-async function CreateFileEntry(bucketId, bucketEntryId, fileName, fileExtension, size, folderId, date) {
+async function createFileEntry(bucketId, bucketEntryId, fileName, fileExtension, size, folderId, date) {
   const file = {
     fileId: bucketEntryId,
     name: fileName,
@@ -62,7 +62,7 @@ async function CreateFileEntry(bucketId, bucketEntryId, fileName, fileExtension,
     fetch(`${process.env.API_URL}/api/storage/file`, {
       method: 'POST',
       mode: 'cors',
-      headers: await Auth.GetAuthHeader(),
+      headers: await Auth.getAuthHeader(),
       body: JSON.stringify({ file })
     }).then(res => {
       resolve()
@@ -73,10 +73,10 @@ async function CreateFileEntry(bucketId, bucketEntryId, fileName, fileExtension,
   })
 }
 
-function RestoreFile(fileObj) {
+function restoreFile(fileObj) {
   return new Promise(async (resolve, reject) => {
     const storj = await getEnvironment()
-    Uploader.UploadFile(storj, fileObj.fullpath).then(() => resolve()).catch(reject)
+    Uploader.uploadFile(storj, fileObj.fullpath).then(() => resolve()).catch(reject)
   })
 }
 
@@ -88,7 +88,7 @@ function cleanRemoteWhenLocalDeleted(lastSyncFailed) {
     }
     const allData = database.dbFiles.getAllData()
     async.eachSeries(allData, (item, next) => {
-      const stat = Tree.GetStat(item.key)
+      const stat = Tree.getStat(item.key)
 
       // If it doesn't exists, or it exists and now is not a file, delete from remote.
       if ((stat && !stat.isFile()) || !fs.existsSync(item.key)) {
@@ -130,7 +130,7 @@ function cleanLocalWhenRemoteDeleted(lastSyncFailed) {
     const syncDate = database.Get('syncStartDate')
 
     // List all files in the folder
-    Tree.GetLocalFileList(localPath).then(list => {
+    Tree.getLocalFileList(localPath).then(list => {
       async.eachSeries(list, (item, next) => {
         database.FileGet(item).then(async fileObj => {
           if (!fileObj && !lastSyncFailed) {
@@ -176,10 +176,10 @@ function fileInfoFromPath(localPath) {
 }
 
 export default {
-  FileInfoFromPath,
-  RemoveFile,
-  CreateFileEntry,
-  RestoreFile,
+  infoFromPath,
+  removeFile,
+  createFileEntry,
+  restoreFile,
   cleanRemoteWhenLocalDeleted,
   cleanLocalWhenRemoteDeleted,
   fileInfoFromPath

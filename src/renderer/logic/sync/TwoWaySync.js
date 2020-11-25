@@ -11,6 +11,7 @@ import Tree from '../tree'
 import Uploader from '../uploader'
 import PackageJson from '../../../../package.json'
 import ConfigStore from '../../../main/config-store'
+import SpaceUsage from '../utils/spaceusage'
 
 /*
  * Sync Method: One Way, from LOCAL to CLOUD (Only Upload)
@@ -26,24 +27,22 @@ const { app } = electron.remote
 async function SyncLogic(callback) {
   const syncMode = ConfigStore.get('syncMode')
   if (syncMode !== 'two-way') {
-    return callback()
-  }
-  Logger.info('Two way upload started')
-  const userDevicesSyncing = await DeviceLock.RequestSyncLock()
-  if (isSyncing || userDevicesSyncing) {
-    if (userDevicesSyncing) {
-      Logger.warn('2-way-sync not started: another device already syncing')
-    }
-    return
-  } else {
-    Logger.info('This device got the sync lock')
-    DeviceLock.StartUpdateDeviceSync()
+    Logger.warn('SyncLogic stopped on 2-way: syncMode is now %s', syncMode)
+    return callback ? callback() : null
   }
 
-  app.on('sync-stop', () => {
+  const userDevicesSyncing = await DeviceLock.requestSyncLock()
+  if (userDevicesSyncing) {
+    Logger.warn('1-way-upload not started: another device already syncing')
+    return start(callback)
+  }
+
+  Logger.info('Two way upload started')
+
+  app.once('sync-stop', () => {
     isSyncing = false
     app.emit('sync-off')
-    throw Error('Monitor stopped')
+    throw Error('2-WAY-SYNC stopped')
   })
 
   isSyncing = true
@@ -57,7 +56,7 @@ async function SyncLogic(callback) {
         Folder.clearTempFolder().then(next).catch(() => next())
       },
       next => {
-        Folder.RootFolderExists().then((exists) => {
+        Folder.rootFolderExists().then((exists) => {
           next(exists ? null : exists)
         }).catch(next)
       },
@@ -67,7 +66,7 @@ async function SyncLogic(callback) {
         database.Get('xPath').then(xPath => {
           console.log('User store path: %s', xPath)
           if (!wtc) {
-            watcher.StartWatcher(xPath).then(watcherInstance => {
+            watcher.startWatcher(xPath).then(watcherInstance => {
               wtc = watcherInstance
               next()
             })
@@ -143,11 +142,11 @@ async function SyncLogic(callback) {
       },
       next => {
         // backup the last database
-        database.BackupCurrentTree().then(() => next()).catch(next)
+        database.backupCurrentTree().then(() => next()).catch(next)
       },
       next => {
         // Sync and update the remote tree.
-        Tree.RegenerateAndCompact().then(() => next()).catch(next)
+        Tree.regenerateAndCompact().then(() => next()).catch(next)
       },
       next => {
         // Delete local folders missing in remote
@@ -176,39 +175,43 @@ async function SyncLogic(callback) {
       // Switch "loading" tray ico
       app.emit('set-tooltip')
       app.emit('sync-off')
-      DeviceLock.StopUpdateDeviceSync()
+      DeviceLock.stopUpdateDeviceSync()
       // Sync.UpdateUserSync(true)
       isSyncing = false
 
-      const rootFolderExist = await Folder.RootFolderExists()
+      const rootFolderExist = await Folder.rootFolderExists()
       if (!rootFolderExist) {
         await database.ClearAll()
         await database.ClearUser()
-        database.CompactAllDatabases()
+        database.compactAllDatabases()
         return
       }
 
       Logger.info('2-WAY SYNC END')
+      SpaceUsage.updateUsage().then(() => { }).catch(() => { })
 
       if (err) {
         Logger.error('Error 2-way-sync monitor:', err)
         async.waterfall([
           next => database.ClearAll().then(() => next()).catch(() => next()),
           next => {
-            database.CompactAllDatabases()
+            database.compactAllDatabases()
             next()
           }
         ], () => {
-          start()
+          start(callback)
         })
       } else {
-        start()
+        start(callback)
       }
     }
   )
 }
 
-function start(startImmediately = false) {
+function start(callback, startImmediately = false) {
+  if (isSyncing) {
+    return Logger.warn('There is an active sync running right now')
+  }
   Logger.info('Start 2-way sync')
   let timeout = 0
   if (!startImmediately) {
@@ -222,7 +225,7 @@ function start(startImmediately = false) {
     clearTimeout(timeoutInstance)
     Logger.log('Waiting %s secs for next 2-way sync. Version: v%s', timeout / 1000, PackageJson.version)
     timeoutInstance = setTimeout(() => {
-      SyncLogic()
+      SyncLogic(callback)
     }, timeout)
   }
 }

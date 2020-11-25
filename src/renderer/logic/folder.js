@@ -16,7 +16,7 @@ function createRemoteFolder(name, parentId) {
       parentFolderId: parentId
     }
 
-    const headers = await Auth.GetAuthHeader()
+    const headers = await Auth.getAuthHeader()
     fetch(`${process.env.API_URL}/api/storage/folder`, {
       method: 'POST',
       mode: 'cors',
@@ -61,7 +61,7 @@ function _deleteLocalWhenRemoteDeleted(lastSyncFailed) {
     const syncDate = Database.Get('syncStartDate')
 
     // Get a list of all local folders
-    Tree.GetLocalFolderList(localPath).then((list) => {
+    Tree.getLocalFolderList(localPath).then((list) => {
       async.eachSeries(list, (item, next) => {
         Database.FolderGet(item).then(async folder => {
           if (folder || lastSyncFailed) {
@@ -103,7 +103,7 @@ function _deleteRemoteFoldersWhenLocalDeleted(lastSyncFailed) {
     }
     const allData = Database.dbFolders.getAllData()
     async.eachSeries(allData, (item, next) => {
-      const stat = Tree.GetStat(item.key)
+      const stat = Tree.getStat(item.key)
       if (path.basename(item.key) !== sanitize(path.basename(item.key))) {
         return next()
       }
@@ -147,7 +147,7 @@ function removeFolder(folderId) {
     Database.Get('xUser').then(async userData => {
       fetch(`${process.env.API_URL}/api/storage/folder/${folderId}`, {
         method: 'DELETE',
-        headers: await Auth.GetAuthHeader()
+        headers: await Auth.getAuthHeader()
       }).then(result => {
         resolve(result)
       }).catch(err => {
@@ -161,7 +161,7 @@ function removeFolder(folderId) {
 function createLocalFolders() {
   return new Promise(async (resolve, reject) => {
     // Get a list of all the folders on the remote tree
-    Tree.GetFolderListFromRemoteTree().then(list => {
+    Tree.getFolderListFromRemoteTree().then(list => {
       async.eachSeries(list, (folder, next) => {
         // Create the folder, doesn't matter if already exists.
         try {
@@ -184,7 +184,7 @@ function createLocalFolders() {
   })
 }
 
-function RootFolderExists() {
+function rootFolderExists() {
   return new Promise((resolve, reject) => {
     Database.Get('xPath').then(xPath => {
       if (!xPath) {
@@ -204,5 +204,5 @@ export default {
   cleanRemoteWhenLocalDeleted,
   removeFolder,
   createLocalFolders,
-  RootFolderExists
+  rootFolderExists
 }

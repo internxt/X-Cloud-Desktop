@@ -41,7 +41,7 @@ export default {
       await database.ClearLastFiles()
       await database.ClearLastFolders()
       await database.ClearUser()
-      await database.CompactAllDatabases()
+      await database.compactAllDatabases()
 
       this.$router.push('/login').catch(() => {})
     } else {

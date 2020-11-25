@@ -5,7 +5,7 @@ import { remote } from 'electron'
 
 let watcherStarted = false
 
-function StartWatcher(path) {
+function startWatcher(path) {
   watcherStarted = false
 
   return new Promise((resolve, reject) => {
@@ -78,5 +78,5 @@ function StartWatcher(path) {
 }
 
 export default {
-  StartWatcher
+  startWatcher
 }

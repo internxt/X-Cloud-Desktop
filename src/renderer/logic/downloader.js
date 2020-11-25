@@ -1,7 +1,6 @@
 import Tree from './tree'
 import async from 'async'
 import Database from '../../database/index'
-import temp from 'temp'
 import path from 'path'
 import fs from 'fs'
 import Sync from './sync'
@@ -13,8 +12,8 @@ import mkdirp from 'mkdirp'
 import sanitize from 'sanitize-filename'
 import Folder from './folder'
 import getEnvironment from './utils/libinxt'
+import File from './file'
 import {client, user} from './utils/analytics'
-import { event } from 'jquery'
 
 const app = electron.remote.app
 
@@ -61,10 +60,12 @@ function downloadFileTemp(fileObj, silent = false) {
     })
 
     const stopDownloadHandler = (storj, state) => {
-      storj.resolveFileCancel(state)
+      if (storj) {
+        storj.resolveFileCancel(state)
+      }
     }
 
-    app.on('sync-stop', () => stopDownloadHandler(storj, state))
+    app.once('sync-stop', () => stopDownloadHandler(storj, state))
   })
 }
 
@@ -73,7 +74,7 @@ function downloadFileTemp(fileObj, silent = false) {
 function _downloadAllFiles() {
   return new Promise((resolve, reject) => {
     // Get a list of all the files on the remote folder
-    Tree.GetFileListFromRemoteTree().then(list => {
+    Tree.getFileListFromRemoteTree().then(list => {
       const totalFiles = list.length
       let currentFiles = 0
       async.eachSeries(list, async (item, next) => {
@@ -95,7 +96,7 @@ function _downloadAllFiles() {
 
         // If local exists, replace, ensure or ignore
         if (localExists) {
-          const stat = Tree.GetStat(item.fullpath)
+          const stat = Tree.getStat(item.fullpath)
 
           // "Created at" time from remote database
           const remoteTime = new Date(item.created_at)
@@ -198,7 +199,7 @@ function _downloadAllFiles() {
 
             if (isError && localExists) {
               Logger.error('%s. Reuploading...', isError)
-              File.RestoreFile(item).then(() => next()).catch(next)
+              File.restoreFile(item).then(() => next()).catch(next)
             } else {
               Logger.error('Cannot restore missing file', err.message)
               next()

@@ -1,7 +1,7 @@
 /**
  * Device Lock
  *
- * Get server lock to prevent multiple devices syncing at the same time
+ * Get server lock to prevent multiple devices syncing at the same time.
  */
 
 import database from '../../database'
@@ -12,28 +12,28 @@ const SYNC_KEEPALIVE_INTERVAL_MS = 25000
 
 let updateSyncInterval
 
-function StartUpdateDeviceSync() {
+function startUpdateDeviceSync() {
   Logger.log('Started sync lock update interval')
-  Update()
-  updateSyncInterval = setInterval(() => Update(), SYNC_KEEPALIVE_INTERVAL_MS)
+  update()
+  updateSyncInterval = setInterval(() => update(), SYNC_KEEPALIVE_INTERVAL_MS)
 }
 
-function StopUpdateDeviceSync() {
+function stopUpdateDeviceSync() {
   if (!updateSyncInterval) {
     Logger.warn('No sync lock update interval to stop')
   } else {
     Logger.log('Stopped sync lock update interval')
   }
-  Unlock()
+  unlock().catch(() => {})
   clearInterval(updateSyncInterval)
 }
 
-function RequestSyncLock() {
+function requestSyncLock() {
   return new Promise(async (resolve, reject) => {
     database.Get('xUser').then(async userData => {
       fetch(`${process.env.API_URL}/api/user/sync`, {
         method: 'GET',
-        headers: await Auth.GetAuthHeader()
+        headers: await Auth.getAuthHeader()
       }).then(async res => {
         return { res, data: await res.json() }
       }).then(res => {
@@ -46,7 +46,7 @@ function RequestSyncLock() {
   })
 }
 
-function Update(toNull = false) {
+function update(toNull = false) {
   Logger.log('Updating user sync device time')
   return new Promise(async (resolve, reject) => {
     database.Get('xUser').then(userData => {
@@ -76,7 +76,7 @@ function Update(toNull = false) {
   })
 }
 
-async function Unlock() {
+async function unlock() {
   Logger.info('Sync unlocked')
   return new Promise(async (resolve, reject) => {
     const userData = await database.Get('xUser')
@@ -100,9 +100,9 @@ async function Unlock() {
 
 export default {
   SYNC_KEEPALIVE_INTERVAL_MS,
-  StartUpdateDeviceSync,
-  StopUpdateDeviceSync,
-  RequestSyncLock,
-  Update,
-  Unlock
+  startUpdateDeviceSync,
+  stopUpdateDeviceSync,
+  requestSyncLock,
+  update,
+  unlock
 }

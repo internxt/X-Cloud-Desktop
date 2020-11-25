@@ -7,15 +7,15 @@ const BUCKET_NAME_MAGIC = '398734aab3c4c30c9f22590e83a95f7e43556a45fc2b3060e0c39
 const BUCKET_META_MAGIC = Buffer.from([66, 150, 71, 16, 50, 114, 88, 160, 163, 35, 154, 65, 162,
   213, 226, 215, 70, 138, 57, 61, 52, 19, 210, 170, 38, 164, 162, 200, 86, 201, 2, 81])
 
-async function GetBridgeAuth() {
+async function getBridgeAuth() {
   const userData = await database.Get('xUser')
   const userId = crypto.createHash('sha256').update(userData.user.userId).digest('hex')
   const result = Buffer.from(`${userData.user.email}:${userId}`).toString('base64')
   return result
 }
 
-async function FindFileByEncryptedName(bucket, encryptedName) {
-  const credential = await GetBridgeAuth()
+async function findFileByEncryptedName(bucket, encryptedName) {
+  const credential = await getBridgeAuth()
   return fetch(`https://api.internxt.com/buckets/${bucket}/file-ids/${querystring.escape(encryptedName)}`, {
     method: 'GET',
     headers: {
@@ -34,7 +34,7 @@ async function FindFileByEncryptedName(bucket, encryptedName) {
   }).catch(err => err)
 }
 
-function DecryptMeta(bufferBase64, decryptKey) {
+function decryptMeta(bufferBase64, decryptKey) {
   const data = Buffer.from(bufferBase64, 'base64')
 
   const digest = data.slice(0, 16)
@@ -51,7 +51,7 @@ function DecryptMeta(bufferBase64, decryptKey) {
   }
 }
 
-function EncryptMeta(data, decryptKey, iv) {
+function encryptMeta(data, decryptKey, iv) {
   const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(decryptKey, 'hex').slice(0, 32), Buffer.from(iv, 'hex').slice(0, 32))
   const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()])
   const digest = cipher.getAuthTag()
@@ -61,54 +61,54 @@ function EncryptMeta(data, decryptKey, iv) {
   return finalEnc.toString('base64')
 }
 
-function GetDeterministicKey(key, id) {
+function getDeterministicKey(key, id) {
   const sha512input = key + id
   return crypto.createHash('sha512').update(Buffer.from(sha512input, 'hex')).digest('hex').slice(0, 64)
 }
 
-function GenerateBucketKey(mnemonic, bucketId) {
+function generateBucketKey(mnemonic, bucketId) {
   const seed = mnemonicToSeedSync(mnemonic).toString('hex')
-  return GetDeterministicKey(seed, bucketId)
+  return getDeterministicKey(seed, bucketId)
 }
 
-function DecryptFilenameParams(mnemonic, bucketId, encryptedName) {
-  const bucketKey = GenerateBucketKey(mnemonic, bucketId)
+function decryptFilenameParams(mnemonic, bucketId, encryptedName) {
+  const bucketKey = generateBucketKey(mnemonic, bucketId)
   if (!bucketKey) {
     throw Error('Bucket key missing')
   }
   const key = crypto.createHmac('sha512', Buffer.from(bucketKey, 'hex')).update(BUCKET_META_MAGIC).digest('hex')
-  return DecryptMeta(encryptedName, key)
+  return decryptMeta(encryptedName, key)
 }
 
-function EncryptFilenameParams(mnemonic, bucketId, decryptedName) {
-  const bucketKey = GenerateBucketKey(mnemonic, bucketId)
+function encryptFilenameParams(mnemonic, bucketId, decryptedName) {
+  const bucketKey = generateBucketKey(mnemonic, bucketId)
   if (!bucketKey) {
     throw Error('Bucket key missing')
   }
   const key = crypto.createHmac('sha512', Buffer.from(bucketKey, 'hex')).update(BUCKET_META_MAGIC).digest('hex')
   const iv = crypto.createHmac('sha512', Buffer.from(bucketKey, 'hex')).update(bucketId).update(decryptedName).digest('hex')
-  return EncryptMeta(decryptedName, key, iv)
+  return encryptMeta(decryptedName, key, iv)
 }
 
-async function DecryptFilename(bucketId, encryptedFilename) {
+async function decryptFilename(bucketId, encryptedFilename) {
   const mnemonic = await database.Get('xMnemonic')
-  return DecryptFilenameParams(mnemonic, bucketId, encryptedFilename)
+  return decryptFilenameParams(mnemonic, bucketId, encryptedFilename)
 }
 
-async function EncryptFileName(bucketId, decryptedName) {
+async function encryptFileName(bucketId, decryptedName) {
   const mnemonic = await database.Get('xMnemonic')
-  return EncryptFilenameParams(mnemonic, bucketId, decryptedName)
+  return encryptFilenameParams(mnemonic, bucketId, decryptedName)
 }
 
-async function FindFileByName(bucketId, fileName) {
-  const encryptedName = await EncryptFileName(bucketId, fileName)
-  return FindFileByEncryptedName(bucketId, encryptedName)
+async function findFileByName(bucketId, fileName) {
+  const encryptedName = await encryptFileName(bucketId, fileName)
+  return findFileByEncryptedName(bucketId, encryptedName)
 }
 
 export default {
-  GetBridgeAuth,
-  FindFileByEncryptedName,
-  FindFileByName,
-  DecryptFilename,
-  EncryptFileName
+  getBridgeAuth,
+  findFileByEncryptedName,
+  findFileByName,
+  decryptFilename,
+  encryptFileName
 }
