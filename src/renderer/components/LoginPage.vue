@@ -159,13 +159,6 @@ export default {
         body: JSON.stringify({ email: this.$data.username })
       })
         .then(async (res) => {
-          client.track({
-            userId: user.getUser().uuid,
-            event: 'user-signin',
-            properties: {
-              email: user.getUser().email
-            }
-          })
           return { res, body: await res.json() }
         })
         .then((res) => {
@@ -185,11 +178,10 @@ export default {
           Logger.error(err)
         })
     },
-    doAccess(sKey) {
+    async doAccess(sKey) {
       const salt = crypt.Decrypt(sKey)
       const pwd = crypt.HashPassword(this.$data.password, salt)
       const encryptedHash = crypt.Encrypt(pwd.hash.toString())
-
       fetch(`${process.env.API_URL}/api/access`, {
         method: 'POST',
         headers: {
@@ -202,6 +194,23 @@ export default {
         })
       })
         .then(async (res) => {
+          await client.identify({
+            userId: user.getUser().uuid,
+            platform: 'desktop',
+            traits: {
+              email: user.getUser().email,
+              storage_used: ''
+            }
+          }, () => {
+            client.track({
+              userId: user.getUser().uuid,
+              event: 'user-signin',
+              platform: 'desktop',
+              properties: {
+                email: user.getUser().email,
+              }
+            })
+          })
           return { res, data: await res.json() }
         })
         .then(async (res) => {
@@ -210,10 +219,12 @@ export default {
             if (res.data.error) {
               alert('Login error\n' + res.data.error)
               if (res.data.error.includes('Wrong email')) {
+                console.log('This is an email error')
                 this.$data.twoFactorCode = ''
                 this.$data.showTwoFactor = false
               }
             } else {
+              console.log('Definetly you have an error')
               alert('Login error')
             }
           } else {
