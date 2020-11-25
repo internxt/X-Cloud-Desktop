@@ -81,7 +81,7 @@ function uploadNewFile(storj, filePath, nCurrent, nTotal) {
       {
         userId: user.user.uuid,
         event: 'file-upload-start',
-        platform: 'Desktop',
+        platform: 'desktop',
         properties: {
           email: user.user.email
         }
@@ -134,7 +134,21 @@ function uploadNewFile(storj, filePath, nCurrent, nTotal) {
             return resolve()
           }
           Logger.warn('NEW FILE ID 2', newFileId)
-          File.CreateFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId, fileStats.mtime).then(resolve).catch(reject)
+          File.CreateFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId, fileStats.mtime).then(res => {
+            client.track(
+              {
+                userId: user.user.uuid,
+                event: 'file-upload-finished',
+                platform: 'desktop',
+                properties: {
+                  email: user.user.email,
+                  file_id: newFileId,
+                  file_size: fileSize
+                }
+              }
+            )
+            resolve(res)
+          }).catch(reject)
         }
       }
     })
@@ -196,7 +210,7 @@ function uploadFile(storj, filePath, nCurrent, nTotal) {
       {
         userId: user.getUser().uuid,
         event: 'file-upload-start',
-        platform: 'Desktop',
+        platform: 'desktop',
         properties: {
           email: user.getUser().email
         }
@@ -226,7 +240,21 @@ function uploadFile(storj, filePath, nCurrent, nTotal) {
           }
         } else {
           File.CreateFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId, fileMtime)
-            .then(res => { resolve(res) })
+            .then(res => {
+              client.track(
+                {
+                  userId: user.getUser().uuid,
+                  event: 'file-upload-finished',
+                  platform: 'desktop',
+                  properties: {
+                    email: user.getUser().email,
+                    file_id: newFileId,
+                    file_size: fileSize
+                  }
+                }
+              )
+              resolve(res)
+            })
             .catch(err => { reject(err) })
         }
       }
