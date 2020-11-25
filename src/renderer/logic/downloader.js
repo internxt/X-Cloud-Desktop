@@ -45,21 +45,6 @@ function downloadFileTemp(fileObj, silent = false) {
         if (!silent) {
           let progressPtg = progress * 100
           progressPtg = progressPtg.toFixed(2)
-          client.track(
-            {
-              userId: user.getUser().uuid,
-              event: 'file-download-start',
-              properties: {
-                email: user.getUser().email,
-                file_id: fileObj.fileId,
-                file_name: fileObj.name,
-                folder_id: fileObj.folder_id,
-                file_type: fileObj.type,
-                mode: user.getSyncMode()
-              }
-
-            }
-          )
           app.emit('set-tooltip', 'Downloading ' + originalFileName + ' (' + progressPtg + '%).')
         } else {
           app.emit('set-tooltip', 'Checking ' + originalFileName)
@@ -143,6 +128,21 @@ function _downloadAllFiles() {
           return next()
         } else if (downloadAndReplace) {
           Logger.log('DOWNLOAD AND REPLACE WITHOUT QUESTION', item.fullpath)
+          client.track(
+            {
+              userId: user.getUser().uuid,
+              event: 'file-download-start',
+              properties: {
+                email: user.getUser().email,
+                file_id: item.fileId,
+                file_name: item.name,
+                folder_id: item.folder_id,
+                file_type: item.type,
+                mode: user.getSyncMode()
+              }
+
+            }
+          )
           downloadFileTemp(item).then(tempPath => {
             if (localExists) { try { fs.unlinkSync(item.fullpath) } catch (e) { } }
             // fs.renameSync gives a "EXDEV: cross-device link not permitted"
