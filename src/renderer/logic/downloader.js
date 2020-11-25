@@ -132,6 +132,7 @@ function _downloadAllFiles() {
             {
               userId: user.getUser().uuid,
               event: 'file-download-start',
+              platform: 'desktop',
               properties: {
                 email: user.getUser().email,
                 file_id: item.fileId,
@@ -154,6 +155,7 @@ function _downloadAllFiles() {
                 {
                   userId: user.getUser().uuid,
                   event: 'file-download-finished',
+                  platform: 'desktop',
                   properties: {
                     email: user.getUser().email,
                     file_id: item.fileId,
@@ -175,7 +177,7 @@ function _downloadAllFiles() {
           })
         } else if (uploadAndReplace) {
           const storj = await getEnvironment()
-          Uploader.UploadFile(storj, item.fullpath, currentFiles, totalFiles).then(() => next()).catch(next)
+          Uploader.uploadFile(storj, item.fullpath, currentFiles, totalFiles).then(() => next()).catch(next)
         } else {
           // Check if should download to ensure file
           const shouldEnsureFile = Math.floor(Math.random() * 33 + 1) % 33 === 0
