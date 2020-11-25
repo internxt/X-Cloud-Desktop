@@ -6,9 +6,6 @@ import OneWayUpload from './sync/OneWayUpload'
 import ConfigStore from '../../main/config-store'
 import TwoWaySync from './sync/TwoWaySync'
 
-let timeoutInstance
-let isSyncing = false
-
 const { app } = electron.remote
 
 app.on('open-folder', function () {
@@ -24,28 +21,27 @@ app.on('open-folder', function () {
 })
 
 app.on('sync-start', function () {
-  if (!isSyncing) {
-    Monitor(true)
-  } else {
-    Logger.warn('There is an active sync running right now')
-  }
+  Monitor(true)
 })
 
 function Monitor(startImmediately = false) {
-  InitMonitor(startImmediately)
+  initMonitor(startImmediately)
 }
 
-async function InitMonitor(startImmediately = false) {
+function repeat() {
+  Monitor(true)
+}
+
+async function initMonitor(startImmediately = false) {
   // Init database if not initialized
-  database.InitDatabase()
+  database.initDatabase()
 
   const syncMode = ConfigStore.get('syncMode')
 
-  isSyncing = true
   if (syncMode === 'two-way') {
-    TwoWaySync.start(startImmediately)
+    TwoWaySync.start(repeat, startImmediately)
   } else {
-    OneWayUpload.start(startImmediately)
+    OneWayUpload.start(repeat, startImmediately)
   }
 }
 

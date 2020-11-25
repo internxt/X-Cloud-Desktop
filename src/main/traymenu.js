@@ -4,6 +4,8 @@ import { Tray, Menu, app, shell, dialog, remote } from 'electron'
 import ConfigStore from './config-store'
 import Logger from '../libs/logger'
 import fs from 'fs'
+import electronLog from 'electron-log'
+import pretty from 'prettysize'
 
 class TrayMenu {
   constructor(mainWindow) {
@@ -36,12 +38,35 @@ class TrayMenu {
 
   generateContextMenu(userEmail) {
     let userMenu = []
+
     if (userEmail) {
-      userMenu = [
+      // Show user account
+      const userEmailDisplay = [
         {
           label: userEmail,
           enabled: false
-        },
+        }
+      ]
+
+      let userUsage = []
+      // Show user display (if we have the data)
+      const accountLimit = ConfigStore.get('limit')
+      const accountUsage = ConfigStore.get('usage')
+      if (accountLimit < 0 || accountUsage < 0) {
+        // Usage not ready to be displayed
+      } else {
+        const readableUsage = pretty(accountUsage)
+        const readableLimit = pretty(accountLimit)
+        const usageString = `Used ${readableUsage} of ${readableLimit}`
+        userUsage = [
+          {
+            label: usageString,
+            enabled: false
+          }
+        ]
+      }
+
+      const userFooter = [
         {
           type: 'separator'
         },
@@ -57,6 +82,8 @@ class TrayMenu {
           }
         }
       ]
+
+      userMenu = Array.concat(userEmailDisplay, userUsage, userFooter)
     }
 
     const contextMenuTemplate = [
@@ -78,6 +105,7 @@ class TrayMenu {
             click: () => {
               Logger.info('User switched to two way sync mode')
               ConfigStore.set('syncMode', 'two-way')
+              app.emit('sync-stop')
             }
           },
           {
@@ -88,6 +116,7 @@ class TrayMenu {
             click: () => {
               Logger.info('User switched to one way upload mode')
               ConfigStore.set('syncMode', 'one-way-upload')
+              app.emit('sync-stop')
             }
           }]
       },
@@ -98,8 +127,23 @@ class TrayMenu {
         }
       },
       {
+        label: 'Open logs',
+        click: function () {
+          try {
+            const logFile = electronLog.transports.file.getFile().path
+            const logPath = path.dirname(logFile)
+            shell.openItem(logPath)
+          } catch (e) {
+            Logger.error('Error opening log path: %s', e.message)
+          }
+        }
+      },
+      {
         label: 'Billing',
         click: function () { shell.openExternal(`${process.env.API_URL}/storage`) }
+      },
+      {
+        type: 'separator'
       },
       {
         label: 'Log out',

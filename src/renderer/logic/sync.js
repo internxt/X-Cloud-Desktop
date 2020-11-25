@@ -3,7 +3,7 @@ import electron from 'electron'
 
 const app = electron.remote.app
 
-function SetModifiedTime(path, time) {
+function setModifiedTime(path, time) {
   let convertedTime = ''
 
   const StringType = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/
@@ -23,5 +23,5 @@ function SetModifiedTime(path, time) {
 }
 
 export default {
-  SetModifiedTime
+  setModifiedTime
 }

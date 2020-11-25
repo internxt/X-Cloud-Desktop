@@ -130,7 +130,7 @@ export default {
     //     alert(err)
     //   })
     // },
-    CreateRootFolder(folderName = ROOT_FOLDER_NAME, n = 0) {
+    createRootFolder(folderName = ROOT_FOLDER_NAME, n = 0) {
       const rootFolderName = folderName + (n ? ` (${n})` : '')
       const rootFolderPath = path.join(HOME_FOLDER_PATH, rootFolderName)
       const exist = fs.existsSync(rootFolderPath)
@@ -141,7 +141,7 @@ export default {
       }
 
       if (exist && !isEmpty) {
-        return this.CreateRootFolder(folderName, n + 1)
+        return this.createRootFolder(folderName, n + 1)
       }
 
       if (!exist) {
@@ -229,10 +229,10 @@ export default {
             }
           } else {
             res.data.user.email = this.$data.username.toLowerCase()
-            this.CreateRootFolder()
+            this.createRootFolder()
             await database.Set(
               'xMnemonic',
-              crypt.DecryptWithKey(res.data.user.mnemonic, this.$data.password)
+              crypt.decryptWithKey(res.data.user.mnemonic, this.$data.password)
             )
             await database.Set('xUser', res.data)
             this.$router.push('/landing-page').catch(() => {})

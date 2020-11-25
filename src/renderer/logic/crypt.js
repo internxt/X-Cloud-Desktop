@@ -13,33 +13,33 @@ if (!CRYPTO_KEY) {
   throw Error('No encryption key provided')
 }
 
-function EncryptWithKey(textToEncrypt, key) {
+function encryptWithKey(textToEncrypt, key) {
   const bytes = CryptoJS.AES.encrypt(textToEncrypt, key).toString()
   const text64 = CryptoJS.enc.Base64.parse(bytes)
   return text64.toString(CryptoJS.enc.Hex)
 }
 
-function Encrypt(textToEncrypt) {
-  return EncryptWithKey(textToEncrypt, CRYPTO_KEY)
+function encrypt(textToEncrypt) {
+  return encryptWithKey(textToEncrypt, CRYPTO_KEY)
 }
 
-function DecryptWithKey(cipherText, key) {
+function decryptWithKey(cipherText, key) {
   const reb = CryptoJS.enc.Hex.parse(cipherText)
   const bytes = CryptoJS.AES.decrypt(reb.toString(CryptoJS.enc.Base64), key)
   return bytes.toString(CryptoJS.enc.Utf8)
 }
 
-function Decrypt(cipherText) {
-  return DecryptWithKey(cipherText, CRYPTO_KEY)
+function decrypt(cipherText) {
+  return decryptWithKey(cipherText, CRYPTO_KEY)
 }
 
-function HashPassword(rawPassword, salt) {
+function hashPassword(rawPassword, salt) {
   salt = salt ? CryptoJS.enc.Hex.parse(salt) : CryptoJS.lib.WordArray.random(128 / 8)
   const hash = CryptoJS.PBKDF2(rawPassword, salt, { keySize: 256 / 32, iterations: 10000 })
   return { hash, salt }
 }
 
-function DeterministicDecryption(cipherText, salt) {
+function deterministicDecryption(cipherText, salt) {
   try {
     const key = CryptoJS.enc.Hex.parse(CRYPTO_KEY)
     const iv = salt ? CryptoJS.enc.Hex.parse(salt.toString()) : key
@@ -55,10 +55,10 @@ function DeterministicDecryption(cipherText, salt) {
   }
 }
 
-function DecryptName(cipherText, salt) {
+function decryptName(cipherText, salt) {
   if (!salt) {
     // If no salt, something is trying to use legacy decryption
-    return ProbabilisticDecryption(cipherText)
+    return probabilisticDecryption(cipherText)
   } else {
     try {
       const possibleAesResult = AesUtil.decrypt(cipherText, salt)
@@ -66,18 +66,18 @@ function DecryptName(cipherText, salt) {
     } catch (e) {
 
     }
-    const decrypted = DeterministicDecryption(cipherText, salt)
+    const decrypted = deterministicDecryption(cipherText, salt)
 
     if (!decrypted) {
       Logger.warn('Error decrypting on a deterministic way')
-      return ProbabilisticDecryption(cipherText)
+      return probabilisticDecryption(cipherText)
     } else {
       return decrypted
     }
   }
 }
 
-function ProbabilisticDecryption(cipherText) {
+function probabilisticDecryption(cipherText) {
   try {
     const reb64 = CryptoJS.enc.Hex.parse(cipherText)
     const bytes = reb64.toString(CryptoJS.enc.Base64)
@@ -89,7 +89,7 @@ function ProbabilisticDecryption(cipherText) {
   }
 }
 
-function ProbabilisticEncryption(content) {
+function probabilisticEncryption(content) {
   try {
     const b64 = CryptoJS.AES.encrypt(content, CRYPTO_KEY).toString()
     const e64 = CryptoJS.enc.Base64.parse(b64)
@@ -100,17 +100,17 @@ function ProbabilisticEncryption(content) {
   }
 }
 
-function EncryptName(name, salt) {
+function encryptName(name, salt) {
   if (!salt) {
     // If no salt, somewhere is trying to use legacy encryption
-    return ProbabilisticEncryption(name)
+    return probabilisticEncryption(name)
   } else {
     // If salt is provided, use new deterministic encryption
     return AesUtil.encrypt(name, salt)
   }
 }
 
-function FileHash(path, hash) {
+function fileHash(path, hash) {
   return new Promise((resolve, reject) => {
     const hasher = crypto.createHash(hash || 'SHA256')
     const stream = fs.createReadStream(path)
@@ -126,14 +126,14 @@ function FileHash(path, hash) {
   })
 }
 
-function CompareHash(path1, path2, hash) {
+function compareHash(path1, path2, hash) {
   return new Promise((resolve, reject) => {
     async.parallel([
       (next) => {
-        FileHash(path1, hash).then(result => next(null, result)).catch(next)
+        fileHash(path1, hash).then(result => next(null, result)).catch(next)
       },
       (next) => {
-        FileHash(path2, hash).then(result => next(null, result)).catch(next)
+        fileHash(path2, hash).then(result => next(null, result)).catch(next)
       }
     ], function (err, results) {
       if (err) { reject(err) } else {
@@ -143,22 +143,22 @@ function CompareHash(path1, path2, hash) {
   })
 }
 
-function EncryptFilename(fileName, folderId) {
+function encryptFilename(fileName, folderId) {
   const fileNameParts = path.parse(fileName)
-  const encryptedFileName = EncryptName(fileNameParts.name, folderId + '')
+  const encryptedFileName = encryptName(fileNameParts.name, folderId + '')
   return encryptedFileName
 }
 
 export default {
-  Encrypt,
-  EncryptWithKey,
-  Decrypt,
-  DecryptWithKey,
-  HashPassword,
-  DeterministicDecryption,
-  ProbabilisticDecryption,
-  DecryptName,
-  FileHash,
-  CompareHash,
-  EncryptFilename
+  encrypt,
+  encryptWithKey,
+  decrypt,
+  decryptWithKey,
+  hashPassword,
+  deterministicDecryption,
+  probabilisticDecryption,
+  decryptName,
+  fileHash,
+  compareHash,
+  encryptFilename
 }

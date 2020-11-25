@@ -20,7 +20,7 @@
 // ENCDATA:   encrypted data as base64 string (format mentioned on top)
 
 // load the build-in crypto functions
-const _crypto = require('crypto')
+const crypto = require('crypto')
 
 // load env variables for deterministic encrypt/decrypt
 const MAGIC_IV = process.env.MAGIC_IV
@@ -37,19 +37,19 @@ module.exports = {
      */
   encrypt: function (text, folderId, randomIv = false) {
     // random initialization vector
-    const iv = randomIv ? _crypto.randomBytes(16) : Buffer.from(MAGIC_IV, 'hex')
+    const iv = randomIv ? crypto.randomBytes(16) : Buffer.from(MAGIC_IV, 'hex')
 
     // random salt
-    const salt = randomIv ? _crypto.randomBytes(64) : Buffer.from(MAGIC_SALT, 'hex')
+    const salt = randomIv ? crypto.randomBytes(64) : Buffer.from(MAGIC_SALT, 'hex')
 
     // derive encryption key: 32 byte key length
     // in assumption the masterkey is a cryptographic and NOT a password there is no need for
     // a large number of iterations. It may can replaced by HKDF
     // the value of 2145 is randomly chosen!
-    const key = _crypto.pbkdf2Sync(CRYPTO_KEY + '-' + folderId, salt, 2145, 32, 'sha512')
+    const key = crypto.pbkdf2Sync(CRYPTO_KEY + '-' + folderId, salt, 2145, 32, 'sha512')
 
     // AES 256 GCM Mode
-    const cipher = _crypto.createCipheriv('aes-256-gcm', key, iv)
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
 
     // encrypt the given text
     const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()])
@@ -83,10 +83,10 @@ module.exports = {
     }
 
     // derive key using; 32 byte key length
-    const key = _crypto.pbkdf2Sync(CRYPTO_KEY + '-' + folderId, salt, 2145, 32, 'sha512')
+    const key = crypto.pbkdf2Sync(CRYPTO_KEY + '-' + folderId, salt, 2145, 32, 'sha512')
 
     // AES 256 GCM Mode
-    const decipher = _crypto.createDecipheriv('aes-256-gcm', key, iv)
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv)
     decipher.setAuthTag(tag)
 
     // encrypt the given text

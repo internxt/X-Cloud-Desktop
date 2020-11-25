@@ -1,7 +1,6 @@
 import Tree from './tree'
 import async from 'async'
 import Database from '../../database/index'
-import temp from 'temp'
 import path from 'path'
 import fs from 'fs'
 import Sync from './sync'
@@ -13,8 +12,8 @@ import mkdirp from 'mkdirp'
 import sanitize from 'sanitize-filename'
 import Folder from './folder'
 import getEnvironment from './utils/libinxt'
+import File from './file'
 import {client, user} from './utils/analytics'
-import { event } from 'jquery'
 
 const app = electron.remote.app
 
@@ -45,21 +44,6 @@ function downloadFileTemp(fileObj, silent = false) {
         if (!silent) {
           let progressPtg = progress * 100
           progressPtg = progressPtg.toFixed(2)
-          client.track(
-            {
-              userId: user.getUser().uuid,
-              event: 'file-download-start',
-              properties: {
-                email: user.getUser().email,
-                file_id: fileObj.fileId,
-                file_name: fileObj.name,
-                folder_id: fileObj.folder_id,
-                file_type: fileObj.type,
-                mode: user.getSyncMode()
-              }
-
-            }
-          )
           app.emit('set-tooltip', 'Downloading ' + originalFileName + ' (' + progressPtg + '%).')
         } else {
           app.emit('set-tooltip', 'Checking ' + originalFileName)
@@ -76,10 +60,12 @@ function downloadFileTemp(fileObj, silent = false) {
     })
 
     const stopDownloadHandler = (storj, state) => {
-      storj.resolveFileCancel(state)
+      if (storj) {
+        storj.resolveFileCancel(state)
+      }
     }
 
-    app.on('sync-stop', () => stopDownloadHandler(storj, state))
+    app.once('sync-stop', () => stopDownloadHandler(storj, state))
   })
 }
 
@@ -88,7 +74,7 @@ function downloadFileTemp(fileObj, silent = false) {
 function _downloadAllFiles() {
   return new Promise((resolve, reject) => {
     // Get a list of all the files on the remote folder
-    Tree.GetFileListFromRemoteTree().then(list => {
+    Tree.getFileListFromRemoteTree().then(list => {
       const totalFiles = list.length
       let currentFiles = 0
       async.eachSeries(list, async (item, next) => {
@@ -110,7 +96,7 @@ function _downloadAllFiles() {
 
         // If local exists, replace, ensure or ignore
         if (localExists) {
-          const stat = Tree.GetStat(item.fullpath)
+          const stat = Tree.getStat(item.fullpath)
 
           // "Created at" time from remote database
           const remoteTime = new Date(item.created_at)
@@ -143,6 +129,22 @@ function _downloadAllFiles() {
           return next()
         } else if (downloadAndReplace) {
           Logger.log('DOWNLOAD AND REPLACE WITHOUT QUESTION', item.fullpath)
+          client.track(
+            {
+              userId: user.getUser().uuid,
+              event: 'file-download-start',
+              platform: 'desktop',
+              properties: {
+                email: user.getUser().email,
+                file_id: item.fileId,
+                file_name: item.name,
+                folder_id: item.folder_id,
+                file_type: item.type,
+                mode: user.getSyncMode()
+              }
+
+            }
+          )
           downloadFileTemp(item).then(tempPath => {
             if (localExists) { try { fs.unlinkSync(item.fullpath) } catch (e) { } }
             // fs.renameSync gives a "EXDEV: cross-device link not permitted"
@@ -154,6 +156,7 @@ function _downloadAllFiles() {
                 {
                   userId: user.getUser().uuid,
                   event: 'file-download-finished',
+                  platform: 'desktop',
                   properties: {
                     email: user.getUser().email,
                     file_id: item.fileId,
@@ -175,7 +178,7 @@ function _downloadAllFiles() {
           })
         } else if (uploadAndReplace) {
           const storj = await getEnvironment()
-          Uploader.UploadFile(storj, item.fullpath, currentFiles, totalFiles).then(() => next()).catch(next)
+          Uploader.uploadFile(storj, item.fullpath, currentFiles, totalFiles).then(() => next()).catch(next)
         } else {
           // Check if should download to ensure file
           const shouldEnsureFile = Math.floor(Math.random() * 33 + 1) % 33 === 0
@@ -196,7 +199,7 @@ function _downloadAllFiles() {
 
             if (isError && localExists) {
               Logger.error('%s. Reuploading...', isError)
-              File.RestoreFile(item).then(() => next()).catch(next)
+              File.restoreFile(item).then(() => next()).catch(next)
             } else {
               Logger.error('Cannot restore missing file', err.message)
               next()
