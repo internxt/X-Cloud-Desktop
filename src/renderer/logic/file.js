@@ -7,6 +7,7 @@ import getEnvironment from './utils/libinxt'
 import async from 'async'
 import Tree from './tree'
 import fs from 'fs'
+import {client, user} from './utils/analytics'
 
 function FileInfoFromPath(localPath) {
   return new Promise((resolve, reject) => {
@@ -94,7 +95,21 @@ function cleanRemoteWhenLocalDeleted(lastSyncFailed) {
         const bucketId = item.value.bucket
         const fileId = item.value.fileId
 
-        RemoveFile(bucketId, fileId).then(() => next()).catch(err => {
+        RemoveFile(bucketId, fileId).then(() => {
+          client.track(
+            {
+              userId: user.getUser().uuid,
+              event: 'file-delete',
+              platform: 'desktop',
+              properties: {
+                email: user.getUser().email,
+                file_id: fileId
+              }
+
+            }
+          )
+          next()
+        }).catch(err => {
           Logger.error('Error deleting remote file %j: %s', item, err)
           next(err)
         })
