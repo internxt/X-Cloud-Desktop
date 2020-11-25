@@ -7,7 +7,7 @@ import getEnvironment from './utils/libinxt'
 import async from 'async'
 import Tree from './tree'
 import fs from 'fs'
-import {client, user} from './utils/analytics'
+import { client, user } from './utils/analytics'
 
 function infoFromPath(localPath) {
   return new Promise((resolve, reject) => {
@@ -95,7 +95,7 @@ function cleanRemoteWhenLocalDeleted(lastSyncFailed) {
         const bucketId = item.value.bucket
         const fileId = item.value.fileId
 
-        RemoveFile(bucketId, fileId).then(() => {
+        removeFile(bucketId, fileId).then(() => {
           client.track(
             {
               userId: user.getUser().uuid,

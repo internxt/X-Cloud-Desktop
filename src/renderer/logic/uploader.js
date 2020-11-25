@@ -141,7 +141,7 @@ function uploadNewFile(storj, filePath, nCurrent, nTotal) {
             return resolve()
           }
           Logger.warn('NEW FILE ID 2', newFileId)
-          File.CreateFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId, fileStats.mtime).then(res => {
+          File.createFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId, fileStats.mtime).then(res => {
             client.track(
               {
                 userId: user.user.uuid,
@@ -246,7 +246,7 @@ function uploadFile(storj, filePath, nCurrent, nTotal) {
             resolve()
           }
         } else {
-          File.CreateFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId, fileMtime)
+          File.createFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId, fileMtime)
             .then(res => {
               client.track(
                 {

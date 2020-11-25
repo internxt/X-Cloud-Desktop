@@ -1,6 +1,7 @@
 import database from '../../../database/index'
 import {client, user} from './analytics'
-async function GetAuthHeader(withMnemonic) {
+
+async function getAuthHeader(withMnemonic) {
   const userData = await database.Get('xUser')
   user.setUser(userData.user)
   const header = {
@@ -12,6 +13,9 @@ async function GetAuthHeader(withMnemonic) {
     header['internxt-mnemonic'] = mnemonic
   }
   return header
+}
+
+async function getUserEmail() {
 }
 
 export default {

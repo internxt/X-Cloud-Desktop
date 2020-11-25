@@ -151,7 +151,7 @@ function _downloadAllFiles() {
             // when application and local folder are not in the same partition
             fs.copyFileSync(tempPath, item.fullpath)
             fs.unlinkSync(tempPath)
-            Sync.SetModifiedTime(item.fullpath, item.created_at).then(() => {
+            Sync.setModifiedTime(item.fullpath, item.created_at).then(() => {
               client.track(
                 {
                   userId: user.getUser().uuid,
