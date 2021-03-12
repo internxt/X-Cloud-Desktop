@@ -1,6 +1,6 @@
 {
   "name": "internxt-drive",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "author": "Internxt <hello@internxt.com>",
   "description": "Internxt Drive client UI",
   "license": "AGPL-3.0",
@@ -72,6 +72,7 @@
       "target": [
         "nsis"
       ],
+      "certificateSubjectName": "Internxt Universal Technologies SL",
       "icon": "build/icons/icon.ico"
     },
     "nsis": {
