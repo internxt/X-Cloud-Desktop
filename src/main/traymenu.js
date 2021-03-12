@@ -7,6 +7,7 @@ import fs from 'fs'
 import electronLog from 'electron-log'
 import pretty from 'prettysize'
 
+var email
 class TrayMenu {
   constructor(mainWindow) {
     this.tray = null
@@ -43,6 +44,7 @@ class TrayMenu {
   }
 
   generateContextMenu(userEmail) {
+    email = userEmail
     let userMenu = []
 
     if (userEmail) {
@@ -77,21 +79,27 @@ class TrayMenu {
           type: 'separator'
         }
       ]
+      const syncing = ConfigStore.get('isSyncing')
       if (userEmail) {
-        userFooter.push(
-          {
-            label: 'Change sync folder',
-            click: function () {
-              const newDir = dialog.showOpenDialogSync({
-                properties: ['openDirectory']
-              })
-              if (newDir && newDir.length > 0 && fs.existsSync(newDir[0])) {
-                app.emit('new-folder-path', newDir[0])
-              } else {
-                Logger.info('Sync folder change error or cancelled')
-              }
+        userFooter.push({
+          label: syncing ? 'Syncing...' : 'Waiting for next sync',
+          enabled: false
+        })
+      }
+      if (userEmail) {
+        userFooter.push({
+          label: 'Change sync folder',
+          click: function() {
+            const newDir = dialog.showOpenDialogSync({
+              properties: ['openDirectory']
+            })
+            if (newDir && newDir.length > 0 && fs.existsSync(newDir[0])) {
+              app.emit('new-folder-path', newDir[0])
+            } else {
+              Logger.info('Sync folder change error or cancelled')
             }
-          })
+          }
+        })
       }
 
       userMenu = Array.concat(userEmailDisplay, userUsage, userFooter)
@@ -101,7 +109,7 @@ class TrayMenu {
     if (userEmail) {
       contextMenuTemplate.push({
         label: 'Open folder',
-        click: function () {
+        click: function() {
           app.emit('open-folder')
         }
       })
@@ -138,50 +146,57 @@ class TrayMenu {
     if (userEmail) {
       contextMenuTemplate.push({
         label: 'Force sync',
-        click: function () {
+        click: function() {
           app.emit('force-sync')
         }
       })
     }
-    contextMenuTemplate.push({
-      label: 'Open logs',
-      click: function () {
-        try {
-          const logFile = electronLog.transports.file.getFile().path
-          const logPath = path.dirname(logFile)
-          shell.openPath(logPath)
-        } catch (e) {
-          Logger.error('Error opening log path: %s', e.message)
+    contextMenuTemplate.push(
+      {
+        label: 'Open logs',
+        click: function() {
+          try {
+            const logFile = electronLog.transports.file.getFile().path
+            const logPath = path.dirname(logFile)
+            shell.openPath(logPath)
+          } catch (e) {
+            Logger.error('Error opening log path: %s', e.message)
+          }
         }
+      },
+      {
+        label: 'Billing',
+        click: function() {
+          shell.openExternal(`${process.env.API_URL}/storage`)
+        }
+      },
+      {
+        label: 'Launch at login',
+        type: 'checkbox',
+        checked: ConfigStore.get('autoLaunch'),
+        click: function(check) {
+          ConfigStore.set('autoLaunch', check.checked)
+          console.log(check.checked)
+          app.emit('change-auto-launch')
+        }
+      },
+      {
+        label: 'Contact Support',
+        click: function() {
+          shell.openExternal(
+            `mailto:support@internxt.zohodesk.eu?subject=Support Ticket&body=If you want to upload log files to our tech teams. Please, find them on the Open Logs option in the menu.`
+          )
+        }
+      },
+      {
+        type: 'separator'
       }
-    }, {
-      label: 'Billing',
-      click: function () {
-        shell.openExternal(`${process.env.API_URL}/storage`)
-      }
-    }, {
-      label: 'Launch at login',
-      type: 'checkbox',
-      checked: ConfigStore.get('autoLaunch'),
-      click: function (check) {
-        ConfigStore.set('autoLaunch', check.checked)
-        console.log(check.checked)
-        app.emit('change-auto-launch')
-      }
-    }, {
-      label: 'Contact Support',
-      click: function () {
-        shell.openExternal(`mailto:support@internxt.zohodesk.eu?subject=Support Ticket&body=If you want to upload log files to our tech teams. Please, find them on the Open Logs option in the menu.`)
-      }
-    },
-    {
-      type: 'separator'
-    })
+    )
 
     if (userEmail) {
       contextMenuTemplate.push({
         label: 'Log out',
-        click: function () {
+        click: function() {
           app.emit('user-logout')
         }
       })
@@ -196,6 +211,11 @@ class TrayMenu {
 
   updateContextMenu(user) {
     const ctxMenu = this.generateContextMenu(user)
+    this.tray.setContextMenu(ctxMenu)
+  }
+
+  updateSyncState() {
+    const ctxMenu = this.generateContextMenu(email)
     this.tray.setContextMenu(ctxMenu)
   }
 
