@@ -1,7 +1,8 @@
 'use strict'
 import Database from '../../../database'
 
-const { Environment } = require('storj')
+// const { Environment } = require('storj')
+const { Environment } = require('inxt-js')
 
 async function _getStorjCredentials() {
   const mnemonic = await Database.Get('xMnemonic')

@@ -115,6 +115,7 @@
     "electron-store": "^5.0.0",
     "electron-updater": "^4.3.1",
     "fs-extra": "^8.1.0",
+    "inxt-js": "git+https://github.com/internxt/inxt-js.git#drive-desktop-test",
     "jquery": "^3.4.1",
     "mkdirp": "^1.0.3",
     "nedb": "^1.8.0",

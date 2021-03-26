@@ -66,6 +66,9 @@ function decryptName(cipherText, salt) {
     } catch (e) {
 
     }
+
+    console.log(cipherText, salt)
+
     const decrypted = deterministicDecryption(cipherText, salt)
 
     if (!decrypted) {

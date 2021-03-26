@@ -134,21 +134,30 @@ async function uploadNewFile(storj, filePath, nCurrent, nTotal) {
     })
 
   return new Promise((resolve, reject) => {
+    console.log(bucketId, tempFile)
+
     const state = storj.storeFile(bucketId, tempFile, {
       progressCallback: function(progress, uploadedBytes, totalBytes) {
-        let progressPtg = progress * 100
-        progressPtg = progressPtg.toFixed(2)
+        console.log('progress', progress)
+
+        // let progressPtg = progress * 100
+        // progressPtg = progressPtg.toFixed(2)
+
+        const progressPercentage = progress.toFixed(2)
+
         app.emit(
           'set-tooltip',
           (nCurrent && nTotal ? `Files: ${nCurrent}/${nTotal}\n` : '') +
             'Uploading ' +
             originalFileName +
             ' (' +
-            progressPtg +
+            progressPercentage +
             '%)'
         )
       },
       finishedCallback: async function(err, newFileId) {
+        console.log('finished callbacked called', err)
+
         if (fs.existsSync(tempFile)) {
           fs.unlinkSync(tempFile)
         }
@@ -164,24 +173,12 @@ async function uploadNewFile(storj, filePath, nCurrent, nTotal) {
             // File already exists, so there's no need to upload again.
             Logger.warn('FILE ALREADY EXISTS', tempFile)
 
-            const networkId = await BridgeService.findFileByName(
-              bucketId,
-              hashName
-            )
+            const networkId = await BridgeService.findFileByName(bucketId, hashName)
 
             if (networkId) {
               newFileId = networkId
-              await File.createFileEntry(
-                bucketId,
-                newFileId,
-                encryptedFileName,
-                fileExt,
-                fileSize,
-                folderId
-              )
-                .then(res => {
-                  resolve(res)
-                })
+              await File.createFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId)
+                .then(resolve)
                 .catch(resolve)
             } else {
               Logger.warn('Cannot find file %s on network', hashName)
@@ -213,15 +210,7 @@ async function uploadNewFile(storj, filePath, nCurrent, nTotal) {
             .catch(err => {
               Logger.error(err)
             })
-          await File.createFileEntry(
-            bucketId,
-            newFileId,
-            encryptedFileName,
-            fileExt,
-            fileSize,
-            folderId,
-            fileStats.mtime
-          )
+          await File.createFileEntry(bucketId, newFileId, encryptedFileName, fileExt, fileSize, folderId, fileStats.mtime)
             .then(resolve)
             .catch(reject)
         }
