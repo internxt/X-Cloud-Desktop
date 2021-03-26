@@ -15,7 +15,7 @@ import database from '../../database'
 import async from 'async'
 import Logger from '../../libs/logger'
 import fs from 'fs'
-import { remote } from 'electron'
+const remote = require('@electron/remote')
 
 export default {
   name: 'landing-page',

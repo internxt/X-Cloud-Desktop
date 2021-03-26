@@ -1,8 +1,7 @@
-import { remote } from 'electron'
 import Logger from '../../../libs/logger'
 import ConfigStore from '../../../main/config-store'
 import Auth from './Auth'
-
+const remote = require('@electron/remote')
 const API_URL = process.env.API_URL
 
 async function fetchOptions() {

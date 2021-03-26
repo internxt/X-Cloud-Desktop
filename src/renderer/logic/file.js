@@ -204,6 +204,12 @@ async function cleanLocalWhenRemoteDeleted(lastSyncFailed) {
   // List all files in the folder
   const list = await Tree.getLocalFileList(localPath)
 
+  while (!database.tempEmpty()) {
+    await new Promise(resolve => {
+      setTimeout(resolve, 1500)
+    })
+  }
+
   for (const item of list) {
     const fileObj = await database.FileGet(item)
 

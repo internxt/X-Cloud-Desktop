@@ -16,7 +16,7 @@ import File from './file'
 import analytics from '../logic/utils/analytics'
 import ConfigStore from '../../main/config-store'
 
-const app = electron.remote.app
+const { app } = require('@electron/remote')
 
 async function downloadFileTemp(fileObj, silent = false) {
   const storj = await getEnvironment()

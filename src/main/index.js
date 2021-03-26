@@ -19,7 +19,7 @@ import fetch from 'electron-fetch'
 import fs from 'fs'
 import ConfigStore from './config-store'
 import TrayMenu from './traymenu'
-
+require('@electron/remote/main').initialize()
 AutoLaunch.configureAutostart()
 
 /**
@@ -57,7 +57,9 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true,
-      webSecurity: process.env.NODE_ENV !== 'development'
+      contextIsolation: false,
+      webSecurity: process.env.NODE_ENV !== 'development',
+      enableRemoteModule: true
     },
     width: 500,
     height: 550,
@@ -202,10 +204,12 @@ app.on('browser-window-focus', (e, w) => {})
 
 app.on('sync-on', function() {
   trayMenu.setIsLoadingIcon(true)
+  trayMenu.updateSyncState()
 })
 
 app.on('sync-off', function() {
   trayMenu.setIsLoadingIcon(false)
+  trayMenu.updateSyncState()
 })
 
 app.on('change-auto-launch', AutoLaunch.configureAutostart)

@@ -1,7 +1,7 @@
 import fs from 'fs'
 import electron from 'electron'
 
-const app = electron.remote.app
+const { app } = require('@electron/remote')
 
 function setModifiedTime(path, time) {
   let convertedTime = ''

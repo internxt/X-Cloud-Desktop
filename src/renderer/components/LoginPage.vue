@@ -68,7 +68,6 @@
 <script>
 import crypt from '../logic/crypt'
 import database from '../../database'
-import { remote } from 'electron'
 import fs from 'fs'
 import Logger from '../../libs/logger'
 import config from '../../config'
@@ -77,7 +76,7 @@ import packageConfig from '../../../package.json'
 import analytics from '../logic/utils/analytics'
 import ConfigStore from '../../main/config-store'
 import uuid4 from 'uuid4'
-
+const remote = require('@electron/remote')
 const ROOT_FOLDER_NAME = 'Internxt Drive'
 const HOME_FOLDER_PATH = remote.app.getPath('home')
 const anonymousId = uuid4()

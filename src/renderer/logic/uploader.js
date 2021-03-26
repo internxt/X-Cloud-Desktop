@@ -15,7 +15,7 @@ import getEnvironment from './utils/libinxt'
 import analytics from './utils/analytics'
 import ConfigStore from '../../main/config-store'
 
-const app = electron.remote.app
+const { app } = require('@electron/remote')
 
 async function uploadNewFile(storj, filePath, nCurrent, nTotal) {
   // Get the folder info of that file.
@@ -66,11 +66,7 @@ async function uploadNewFile(storj, filePath, nCurrent, nTotal) {
 
   Logger.log('NEW file found %s , size: %d', filePath, fileSize)
   // Copy file to temp folder
-  const tempPath = path.join(
-    electron.remote.app.getPath('home'),
-    '.internxt-desktop',
-    'tmp'
-  )
+  const tempPath = path.join(app.getPath('home'), '.internxt-desktop', 'tmp')
   if (!fs.existsSync(tempPath)) {
     mkdirp.sync(tempPath)
   }
@@ -79,7 +75,6 @@ async function uploadNewFile(storj, filePath, nCurrent, nTotal) {
   relativePath = relativePath.replace(/\\/g, '/')
   Logger.log('Network name should be: %s', relativePath)
   const hashName = Hash.hasher(relativePath)
-  console.log(hashName)
   // Double check: Prevent upload if file already exist
   let maybeNetworkId = await BridgeService.findFileByName(bucketId, hashName)
   // this will remove in the future version
@@ -89,8 +84,8 @@ async function uploadNewFile(storj, filePath, nCurrent, nTotal) {
       Hash.hasher(relativePath.replace(/\//g, '\\'))
     )
   }
-
   if (maybeNetworkId) {
+    Logger.log('already existe')
     return File.createFileEntry(
       bucketId,
       maybeNetworkId,
@@ -100,14 +95,6 @@ async function uploadNewFile(storj, filePath, nCurrent, nTotal) {
       folderId
     )
   }
-  await File.removeFileEntry(
-    bucketId,
-    maybeNetworkId,
-    encryptedFileName,
-    fileExt,
-    fileSize,
-    folderId
-  )
   const tempFile = path.join(tempPath, hashName)
   if (fs.existsSync(tempFile)) {
     fs.unlinkSync(tempFile)
@@ -357,11 +344,7 @@ async function uploadFile(storj, filePath, nCurrent, nTotal, item) {
   const finalName = encryptedFileName + (fileExt ? '.' + fileExt : '')
 
   // Copy file to temp folder
-  const tempPath = path.join(
-    electron.remote.app.getPath('home'),
-    '.internxt-desktop',
-    'tmp'
-  )
+  const tempPath = path.join(app.getPath('home'), '.internxt-desktop', 'tmp')
   if (!fs.existsSync(tempPath)) {
     mkdirp.sync(tempPath)
   }

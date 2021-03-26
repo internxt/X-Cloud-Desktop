@@ -51,13 +51,10 @@ async function requestSyncLock() {
 function update(toNull = false) {
   Logger.log('Updating user sync device time')
   return new Promise((resolve, reject) => {
-    database.Get('xUser').then(userData => {
+    Auth.getAuthHeader().then(header => {
       const fetchOpts = {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${userData.token}`,
-          'content-type': 'application/json'
-        },
+        headers: header,
         mode: 'cors'
       }
       if (toNull) {
@@ -89,14 +86,11 @@ function update(toNull = false) {
 
 async function unlock() {
   Logger.info('Sync unlocked')
-  const userData = await database.Get('xUser')
+  const header = await Auth.getAuthHeader()
   return new Promise((resolve, reject) => {
     fetch(`${process.env.API_URL}/api/user/sync`, {
       method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${userData.token}`,
-        'content-type': 'application/json'
-      }
+      headers: header
     })
       .then(res => {
         if (res.status === 200) {

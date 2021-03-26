@@ -129,10 +129,18 @@ async function getFolderObjectListFromRemoteTree() {
 }
 
 function generatePath(pathDict, item) {
+  if (!pathDict[item.parent]) return
   if (pathDict[item.parent].full) {
     return pathDict[item.parent].path
   } else {
-    pathDict[item.parent].path = path.join(generatePath(pathDict, pathDict[item.parent]), pathDict[item.parent].path)
+    var parentPath = generatePath(pathDict, pathDict[item.parent])
+    if (parentPath === undefined) {
+      return
+    }
+    pathDict[item.parent].path = path.join(
+      parentPath,
+      pathDict[item.parent].path
+    )
     pathDict[item.parent].full = true
     return pathDict[item.parent].path
   }
@@ -146,21 +154,34 @@ async function regenerateLocalDbFolder(tree) {
   await database.dbFolders.remove({}, { multi: true })
   for (const item of tree.folders) {
     if (!item.parent_id) {
-      finalDict[item.id] = {path: basePath, parent: item.parent_id, full: true}
+      finalDict[item.id] = {
+        path: basePath,
+        parent: item.parent_id,
+        full: true
+      }
       continue
     }
-    finalDict[item.id] = {path: crypt.decryptName(item.name, item.parent_id), parent: item.parent_id, full: false}
+    finalDict[item.id] = {
+      path: crypt.decryptName(item.name, item.parent_id),
+      parent: item.parent_id,
+      full: false
+    }
   }
 
   for (const item of tree.folders) {
     if (ConfigStore.get('stopSync')) {
       throw Error('stop sync')
     }
-    if (!item.parent_id) {
+    if (!item.parent_id || !finalDict[item.parent_id]) {
       continue
     }
     if (!finalDict[item.id].full) {
-      finalDict[item.id].path = path.join(generatePath(finalDict, finalDict[item.id]), finalDict[item.id].path)
+      var parentPath = generatePath(finalDict, finalDict[item.id])
+      if (parentPath === undefined) {
+        delete finalDict[item.id]
+        continue
+      }
+      finalDict[item.id].path = path.join(parentPath, finalDict[item.id].path)
       finalDict[item.id].full = true
     }
     const fullNewPath = finalDict[item.id].path
@@ -185,6 +206,9 @@ async function regenerateLocalDbFile(tree, folderDict) {
   for (const item of tree.files) {
     if (ConfigStore.get('stopSync')) {
       throw Error('stop sync')
+    }
+    if (!folderDict[item.folder_id]) {
+      continue
     }
     const filePath = folderDict[item.folder_id].path
     item.filename = crypt.decryptName(item.name, item.folder_id)
@@ -364,9 +388,13 @@ function updateLocalDb() {
   return new Promise((resolve, reject) => {
     getList()
       .then(tree => {
-        regenerateLocalDbFolder(tree).then(result => {
-          regenerateLocalDbFile(tree, result).then(resolve).catch(reject)
-        }).catch(reject)
+        regenerateLocalDbFolder(tree)
+          .then(result => {
+            regenerateLocalDbFile(tree, result)
+              .then(resolve)
+              .catch(reject)
+          })
+          .catch(reject)
       })
       .catch(err => {
         Logger.error('Error updating localDb', err)

@@ -33,9 +33,9 @@
 </template>
 
 <script>
-import { remote } from 'electron'
 import fs from 'fs'
 import database from '../../database'
+const remote = require('@electron/remote')
 
 export default {
   name: 'config-page',

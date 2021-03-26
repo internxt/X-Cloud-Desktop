@@ -24,7 +24,7 @@ ConfigStore.set('stopSync', false)
 let wtc = null
 let lastSyncFailed = false
 let timeoutInstance = null
-const { app } = electron.remote
+const { app } = require('@electron/remote')
 
 function syncStop() {
   if (ConfigStore.get('isSyncing')) {
