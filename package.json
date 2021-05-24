@@ -133,6 +133,7 @@
     "semver": "^7.3.2",
     "storj": "internxt/node-lib-exec",
     "temp": "^0.9.0",
+    "ui-components-library": "github:internxt/ui-components-library#master",
     "uuid4": "^2.0.2",
     "vue": "^2.5.16",
     "vue-electron": "^1.0.6",
