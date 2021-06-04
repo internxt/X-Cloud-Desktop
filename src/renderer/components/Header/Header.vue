@@ -1,19 +1,25 @@
 <template>
     <div>
       <div class="flex justify-between p-4">
-        
         <div>
           <!-- <div>{{Brand}}</div> -->
           <div class="text-gray-800 text-xl font-extrabold">{{appName}}</div>
           <div class="text-sm font-extrabold">{{SubtitleApp}}</div>
         </div>
 
-      <div class="flex">
-        <UilFolderNetwork class="mr-3 fill-current text-blue-600 cursor-pointer" size="24px" />
-        <UilSetting class="mr-3 fill-current text-blue-600 cursor-pointer" size="24px"/>
-        <UilUserCircle class="fill-current text-blue-600 cursor-pointer" size="24px" />
-      </div>
-      
+        <div class="flex items-start">
+          <button class="focus:outline-none">
+            <UilFolderNetwork class="text-blue-600 cursor-pointer" size="24px" />
+          </button>
+
+          <button class="focus:outline-none ml-3">
+            <UilSetting class="text-blue-600 cursor-pointer" size="24px"/>
+          </button>
+
+          <button class="focus:outline-none ml-3" @click="setIsOpen">
+            <UilUserCircle class="text-blue-600 cursor-pointer" size="24px" />
+          </button>
+        </div>
       </div>
 
 
@@ -47,22 +53,18 @@ import 'ant-design-vue/dist/antd.css'
 export default {
   data() {
     return {
-      visible: false,
       placement: 'left'
     }
   },
   methods: {
     debug() {
-      // console.log(appName)
+      console.log('uwu')
     },
     afterVisibleChange(val) {
       console.log('visible', val)
     },
-    showDrawer() {
-      this.visible = true
-    },
-    onClose() {
-      this.visible = false
+    setIsOpen() {
+      this.$emit('parentPopme', '')
     }
   },
   name: 'Header',

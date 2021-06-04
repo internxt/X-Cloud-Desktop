@@ -1,15 +1,31 @@
 <template>
   <div class="bg-cool-gray-10">
-   <div class="text-cool-gray-90"></div>
+    <div class="text-cool-gray-90"></div>
+    <!-- <SettingsModal ref="settingsModal"/> -->
 
-      <Header 
-      :appName="appName" 
-      :SubtitleApp="SubtitleApp" />
+  <!-- This Modal must move to /src/renderer/components/Modals/SettingsModal/ once onclick starts working -->
+  <div @parentPopme="popTimeline">
+    <!-- For now, to be able to see the modal change the v-if to true -->
+    <div v-if="isOpen" class="bg-white absolute bottom-0 w-full h-48 mb-24 py-4 px-6 rounded-t-2xl">
+      <div class="flex justify-between">
+        <span class="subTitle">Account</span>
 
-      <FileStatus />
-      <SyncButtonAction />
+        <span>x</span>
+      </div>
 
-      <!-- <div id="selectSyncPanel">
+      <div class="flex flex-col h-full justify-start">
+        <span class="mt-3">Open logs</span>
+        <span class="mt-2">Contact support</span>
+        <span class="mt-2">Log out</span>
+        <span class="mt-2">Quit</span>
+      </div>
+    </div>
+</div>
+  <Header :appName="appName" :SubtitleApp="SubtitleApp" />
+  <FileStatus />
+  <SyncButtonAction />
+
+    <!-- <div id="selectSyncPanel">
         <input type="checkbox" id="carpeta1" checked="false" />
       </div>
 
@@ -39,7 +55,6 @@
         Path:
         <a href="#" @click="openFolder()">{{ this.$data.localPath }}</a>
       </div> -->
-    
   </div>
 </template>
 
@@ -62,6 +77,7 @@ import analytics from '../logic/utils/analytics'
 import ConfigStore from '../../../src/main/config-store'
 import Header from '../components/Header/Header'
 import FileStatus from '../components/FileStatus//FileStatus'
+import SettingsModal from '../components/Modals/SettingsModal/SettingsModal'
 import SyncButtonAction from '../components/SyncButtonAction/SyncButtonAction'
 import FileLogger from '../logic/FileLogger'
 
@@ -81,7 +97,8 @@ export default {
   components: {
     Header,
     FileStatus,
-    SyncButtonAction
+    SyncButtonAction,
+    SettingsModal
   },
 
   data() {
@@ -93,7 +110,8 @@ export default {
       toolTip: '',
       appName: 'Drive',
       SubtitleApp: 'hello@internxt.com',
-      IconClass: 'prueba'
+      IconClass: 'prueba',
+      isOpen: false
     }
   },
 
@@ -104,7 +122,7 @@ export default {
       .catch(() => {})
     database
       .Get('xUser')
-      .then(xUser => {
+      .then((xUser) => {
         const userEmail = xUser.user.email
         remote.app.emit('update-menu', userEmail)
         Logger.info(
@@ -115,16 +133,16 @@ export default {
           PackageJson.version
         )
       })
-      .catch(err => {
+      .catch((err) => {
         console.log('Cannot update tray icon', err.message)
       })
   },
-  beforeDestroy: function() {
+  beforeDestroy: function () {
     remote.app.removeAllListeners('user-logout')
     remote.app.removeAllListeners('new-folder-path')
     remote.app.removeListener('set-tooltip', this.setTooltip)
   },
-  created: function() {
+  created: function () {
     this.$app = this.$electron.remote.app
     Monitor.Monitor(true)
     this.getLocalFolderPath()
@@ -148,7 +166,7 @@ export default {
           .then(() => {
             analytics.resetUser()
           })
-          .catch(err => {
+          .catch((err) => {
             Logger.error(err)
           })
       }
@@ -156,7 +174,7 @@ export default {
       this.$router.push('/').catch(() => {})
     })
 
-    remote.app.on('new-folder-path', async newPath => {
+    remote.app.on('new-folder-path', async (newPath) => {
       remote.app.emit('sync-stop')
       await database.ClearAll()
       await database.Set('lastSyncSuccess', false)
@@ -165,6 +183,10 @@ export default {
     })
   },
   methods: {
+    popTimeline(val) {
+      console.log('llega')
+      this.isOpen = !this.isOpen
+    },
     quitApp() {
       remote.app.emit('app-close')
     },
@@ -191,20 +213,20 @@ export default {
     },
     getUser() {},
     getUsage() {
-      SpaceUsage.getLimit().then(limit => {
+      SpaceUsage.getLimit().then((limit) => {
         console.log('Limit: ' + limit)
       })
-      SpaceUsage.getUsage().then(usage => {
+      SpaceUsage.getUsage().then((usage) => {
         console.log('Usage: ' + usage)
       })
     },
     getLocalFolderPath() {
       database
         .Get('xPath')
-        .then(path => {
+        .then((path) => {
           this.$data.localPath = path
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err)
           this.$data.localPath = 'error'
         })

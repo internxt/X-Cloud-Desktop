@@ -68,7 +68,9 @@ function createWindow() {
     frame: process.env.NODE_ENV === 'development',
     autoHideMenuBar: true,
     skipTaskbar: process.env.NODE_ENV !== 'development',
-    show: process.env.NODE_ENV === 'development'
+    show: process.env.NODE_ENV === 'development',
+    resizable: false,
+    menuBarVisible: false
   })
 
   mainWindow.loadURL(winURL)
