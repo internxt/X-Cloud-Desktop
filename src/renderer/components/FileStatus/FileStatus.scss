@@ -1,28 +1,15 @@
-.text-brand {
-    @include text-xs;
+.fileStatusBox {
+    overflow-y: auto;
 }
-.hide {
-    visibility: hidden !important;
-}
-.mt-0-64 {
-    margin-top: 5px;
-}
-input[type='radio']{
-    width: 10px !important;
-    height: 10px !important;
-}
-.h-19r {
-    height: 18.5rem;
-}
-body::-webkit-scrollbar {
+.fileStatusBox::-webkit-scrollbar {
     width: 4px;               /* width of the entire scrollbar */
   }
   
-  body::-webkit-scrollbar-track {
+  .fileStatusBox::-webkit-scrollbar-track {
     background: white;        /* color of the tracking area */
   }
   
-  body::-webkit-scrollbar-thumb {
+  .fileStatusBox::-webkit-scrollbar-thumb {
     background-color: #1D4ED8;    /* color of the scroll thumb */
     border-radius: 20px;       /* roundness of the scroll thumb */
     // border: 3px solid orange;  /* creates padding around scroll thumb */

@@ -83,8 +83,7 @@ import FileLogger from '../logic/FileLogger'
 
 window.FileLogger = FileLogger
 window.resizeTo(400, 400)
-
-FileLogger.on('new-entry', (item) => console.log(item))
+FileLogger.on('update-last-entry', (item) => console.log(item))
 
 const remote = require('@electron/remote')
 var t = ''
@@ -111,7 +110,7 @@ export default {
       appName: 'Drive',
       SubtitleApp: 'hello@internxt.com',
       IconClass: 'prueba',
-      isOpen: false
+      file: {}
     }
   },
 
@@ -142,13 +141,16 @@ export default {
     remote.app.removeAllListeners('new-folder-path')
     remote.app.removeListener('set-tooltip', this.setTooltip)
   },
-  created: function () {
+  created: function() {
+    FileLogger.on('update-last-entry', (item) => {
+      this.file = item
+    })
     this.$app = this.$electron.remote.app
     Monitor.Monitor(true)
     this.getLocalFolderPath()
     this.getCurrentEnv()
     remote.app.on('set-tooltip', this.setTooltip)
-
+    console.log('Filelogger', this.file)
     remote.app.on('user-logout', async (saveData = false) => {
       remote.app.emit('sync-stop')
       await database.logOut(saveData)
