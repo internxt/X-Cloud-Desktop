@@ -7,20 +7,26 @@
               <div class="justify-center">
                 <div class="flex justify-center">
                   <div class="flex mb-2" v-if="syncState === true">
-                      <div class="bg-blue-600 rounded-full p-2 w-10 h-10">
-                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </div>
-                  </div>
-                  <div v-else>
+
                     <div class="flex mb-4">
                       <div @click="forceSync()">
                         <UilCloudDataConnection class="w-10 h-10 fill-current text-white bg-blue-600 text-3xl p-2 rounded-full cursor-pointer hover:bg-indigo-900 shadow-2xl transition duration-500 ease-in-out"/>
                         <div class="text-xs text-blue-600 mt-1">Full sync</div>
                       </div>
                     </div>
+
+                  </div>
+
+                  <div v-else>
+                      <div class="bg-blue-300 rounded-full p-2.5 w-10 h-10 mr-2">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <div class="text-xs text-blue-600 mt-1">Synchronizing...</div>
+                      </div>
+
+
                   </div>
 
                 </div>
