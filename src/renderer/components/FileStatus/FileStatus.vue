@@ -93,7 +93,7 @@ import CircleWithCloud from '../ExportIcons/CircleWithCloud'
 import ConfigStore from '../../../main/config-store'
 
 const { app } = require('@electron/remote')
-window.FileLogger = FileLogger
+// window.FileLogger = FileLogger
 
 export default {
   data() {
