@@ -160,6 +160,11 @@
         >
           Quit
         </div>
+        <div
+          class="text-sm hover:text-blue-600 mt-3 cursor-pointer"
+        >
+          Billing
+        </div>
         <div>
           <div
             class="text-xs border border-dashed border-gray-200 p-2 px-3 rounded mt-6"
