@@ -2,11 +2,15 @@
   <div
     class="bg-white rounded-t-2xl p-4 px-6 h-48 fileStatusBox overflow-scroll"
   >
-    <div class="text-base text-black font-bold mb-3">File status</div>
+  <div class="flex justify-between">
+    <div class="text-base text-black font-bold">File status</div>
+    <div class="py-1"><span class="p-1 px-2 bg-blue-600 text-white text-xs rounded-full cursor-pointer hover:bg-blue-900">clear</span></div>
+  </div>
+
     <div v-if="this.FileStatusSync.length > 0">
       <div class="mb-1">
         <div
-          class=""
+          class=" mt-4"
           v-for="(item, index) in FileStatusSync"
           v-bind:key="index"
         >
