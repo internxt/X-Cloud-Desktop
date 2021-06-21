@@ -4,7 +4,12 @@
   >
   <div class="flex justify-between">
     <div class="text-base text-black font-bold">File status</div>
-    <div class="py-1"><span class="p-1 px-2 bg-blue-600 text-white text-xs rounded-full cursor-pointer hover:bg-blue-900">clear</span></div>
+    <div v-if="this.FileStatusSync.length > 0" class="py-1">
+      <span @click="clearFileLogger()" class="p-1 px-2 bg-gray-200 text-white text-xs rounded-full cursor-not-allowed">clear</span>
+    </div>
+    <div v-else>
+      <span class="p-1 px-2 bg-blue-600 text-white text-xs rounded-full cursor-pointer hover:bg-blue-900">clear</span>
+    </div>
   </div>
 
     <div v-if="this.FileStatusSync.length > 0">
@@ -184,12 +189,16 @@ import {
 } from '@iconscout/vue-unicons'
 import './FileStatus'
 import CircleWithCloud from '../ExportIcons/CircleWithCloud'
+import ConfigStore from '../../../main/config-store'
+
+const remote = require('@electron/remote')
 
 export default {
   data() {
     return {
       test: {},
-      loading: false
+      loading: false,
+      stopSync: ConfigStore.get('stopSync')
     }
   },
   props: {
@@ -209,6 +218,9 @@ export default {
         minimumFractionDigits: 0
       })
       return formatter.format(value)
+    },
+    clearFileLogger() {
+      remote.app.emit('clear-file-logger')
     }
   },
   name: 'FileStatus',
