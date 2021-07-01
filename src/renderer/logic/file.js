@@ -370,11 +370,15 @@ async function sincronizeFile() {
     remote.app.emit('set-tooltip', `Checking file ${file.key}`)
     if (!file.select) {
       try {
-        fs.unlink(file.key)
+        fs.unlinkSync(file.key)
         await Database.dbRemoveOne(Database.dbFiles, { key: file.key })
         continue
       } catch (e) {
-        Logger.error(e)
+        if (/no such file or directory/.test(e.message)) {
+          await Database.dbRemoveOne(Database.dbFiles, { key: file.key })
+        } else {
+          Logger.error(e)
+        }
         continue
       }
     }
