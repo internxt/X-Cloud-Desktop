@@ -17,9 +17,9 @@ function generateRegExp(path, level = 0) {
     sep = '/'
   }
   if (level) {
-    return new RegExp(`^${parentPath}(${sep}[^${sep}]+){1,${level}}[^${sep}]+$`)
+    return new RegExp(`^(/){0,1}${parentPath}(${sep}[^${sep}]+){1,${level}}[^${sep}]+$`)
   } else {
-    return new RegExp(`^${parentPath}`)
+    return new RegExp(`^(/){0,1}${parentPath}`)
   }
 }
 
