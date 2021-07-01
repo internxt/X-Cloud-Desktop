@@ -176,9 +176,17 @@ const dbRemoveOne = (db, consult) => {
     })
   })
 }
+const dbUpdateOne = (db, consult, value) => {
+  return new Promise((resolve, reject) => {
+    db.update(consult, value, {}, (err, document) => {
+      if (err) reject(err)
+      else resolve(document)
+    })
+  })
+}
 const dbUpdate = (db, consult, value) => {
   return new Promise((resolve, reject) => {
-    db.update(consult, value, (err, document) => {
+    db.update(consult, value, {multi: true}, (err, document) => {
       if (err) reject(err)
       else resolve(document)
     })
@@ -361,6 +369,7 @@ export default {
   dbRemove,
   dbRemoveOne,
   dbInsert,
+  dbUpdateOne,
   dbUpdate,
   ClearFilesSelect,
   ClearFilesCloud,

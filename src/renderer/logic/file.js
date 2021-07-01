@@ -404,7 +404,7 @@ async function sincronizeFile() {
       if (parentFolder && parentFolder.nameChecked) {
         file.nameChecked = true
       }
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -423,7 +423,7 @@ async function sincronizeFile() {
       }
       if (shouldEnsureFile) {
         await ensureFile(file, rootPath, user, parentFolder)
-        await Database.dbUpdate(
+        await Database.dbUpdateOne(
           Database.dbFiles,
           { key: file.key },
           { $set: file }
@@ -676,7 +676,7 @@ async function uploadState(file, rootPath, user, parentFolder) {
         user,
         parentFolder
       )
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -686,7 +686,7 @@ async function uploadState(file, rootPath, user, parentFolder) {
     if (cloudTime > localTime) {
       file.state = state.state.DOWNLOAD
       await downloadFile(file, cloudFile, localFile)
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -697,7 +697,7 @@ async function uploadState(file, rootPath, user, parentFolder) {
       file.state = state.state.SYNCED
       file.needSync = false
       file.value = cloudFile
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -714,7 +714,7 @@ async function uploadState(file, rootPath, user, parentFolder) {
       user,
       parentFolder
     )
-    await Database.dbUpdate(Database.dbFiles, { key: file.key }, { $set: file })
+    await Database.dbUpdateOne(Database.dbFiles, { key: file.key }, { $set: file })
     return
   }
   if (cloudFile && !localFile) {
@@ -724,7 +724,7 @@ async function uploadState(file, rootPath, user, parentFolder) {
       file.value = cloudFile
       file.state = state.state.DOWNLOAD
       await downloadFile(file, cloudFile, localFile)
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -743,7 +743,7 @@ async function uploadState(file, rootPath, user, parentFolder) {
           return
         }
         Logger.error(`Error removing remote file ${file.key}. Error: ${e}`)
-        await Database.dbUpdate(
+        await Database.dbUpdateOne(
           Database.dbFiles,
           { key: file.key },
           { $set: file }
@@ -788,7 +788,7 @@ async function downloadState(file, rootPath, user, parentFolder) {
         user,
         parentFolder
       )
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -797,7 +797,7 @@ async function downloadState(file, rootPath, user, parentFolder) {
     }
     if (cloudTime > localTime) {
       await downloadFile(file, cloudFile, localFile)
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -808,7 +808,7 @@ async function downloadState(file, rootPath, user, parentFolder) {
       file.state = state.state.SYNCED
       file.needSync = false
       file.value = cloudFile
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -830,7 +830,7 @@ async function downloadState(file, rootPath, user, parentFolder) {
         user,
         parentFolder
       )
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -847,7 +847,7 @@ async function downloadState(file, rootPath, user, parentFolder) {
           return
         }
         Logger.error(`Error removing local file ${file.key}. Error: ${e}`)
-        await Database.dbUpdate(
+        await Database.dbUpdateOne(
           Database.dbFiles,
           { key: file.key },
           { $set: file }
@@ -858,7 +858,7 @@ async function downloadState(file, rootPath, user, parentFolder) {
   }
   if (cloudFile && !localFile) {
     await downloadFile(file, cloudFile, localFile)
-    await Database.dbUpdate(Database.dbFiles, { key: file.key }, { $set: file })
+    await Database.dbUpdateOne(Database.dbFiles, { key: file.key }, { $set: file })
     return
   }
   if (!localFile && !cloudFile) {
@@ -895,7 +895,7 @@ async function deleteCloudState(file, rootPath, user, parentFolder) {
         user,
         parentFolder
       )
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -906,7 +906,7 @@ async function deleteCloudState(file, rootPath, user, parentFolder) {
       file.state = state.state.DOWNLOAD
       file.value = cloudFile
       await downloadFile(file, cloudFile, localFile)
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -917,7 +917,7 @@ async function deleteCloudState(file, rootPath, user, parentFolder) {
       file.state = state.state.SYNCED
       file.needSync = false
       file.value = cloudFile
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -936,7 +936,7 @@ async function deleteCloudState(file, rootPath, user, parentFolder) {
       user,
       parentFolder
     )
-    await Database.dbUpdate(Database.dbFiles, { key: file.key }, { $set: file })
+    await Database.dbUpdateOne(Database.dbFiles, { key: file.key }, { $set: file })
     return
   }
   if (cloudFile && !localFile) {
@@ -946,7 +946,7 @@ async function deleteCloudState(file, rootPath, user, parentFolder) {
       file.value = cloudFile
       file.state = state.state.DOWNLOAD
       await downloadFile(file, cloudFile, localFile)
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -1002,7 +1002,7 @@ async function deleteLocalState(file, rootPath, user, parentFolder) {
         user,
         parentFolder
       )
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -1013,7 +1013,7 @@ async function deleteLocalState(file, rootPath, user, parentFolder) {
       file.state = state.state.DOWNLOAD
       file.value = cloudFile
       await downloadFile(file, cloudFile, localFile)
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -1024,7 +1024,7 @@ async function deleteLocalState(file, rootPath, user, parentFolder) {
       file.state = state.state.SYNCED
       file.needSync = false
       file.value = cloudFile
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -1046,7 +1046,7 @@ async function deleteLocalState(file, rootPath, user, parentFolder) {
         user,
         parentFolder
       )
-      await Database.dbUpdate(
+      await Database.dbUpdateOne(
         Database.dbFiles,
         { key: file.key },
         { $set: file }
@@ -1068,7 +1068,7 @@ async function deleteLocalState(file, rootPath, user, parentFolder) {
   }
   if (cloudFile && !localFile) {
     await downloadFile(file, cloudFile, localFile)
-    await Database.dbUpdate(Database.dbFiles, { key: file.key }, { $set: file })
+    await Database.dbUpdateOne(Database.dbFiles, { key: file.key }, { $set: file })
     return
   }
   if (!localFile && !cloudFile) {
