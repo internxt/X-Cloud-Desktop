@@ -12,6 +12,8 @@ import lodash from 'lodash'
 import nameTest from './utils/nameTest'
 import crypt from './crypt'
 import SyncMode from './sync/NewTwoWayUpload'
+import SelectiveMiddleware from './selectiveSyncMiddleware'
+import PathTrie from './utils/pathTrie'
 
 const remote = require('@electron/remote')
 
@@ -166,7 +168,7 @@ async function removeFolders() {
         } else {
           folder.state = state.state.SYNCED
           folder.needSync = false
-          await Database.dbUpdate(
+          await Database.dbUpdateOne(
             Database.dbFolders,
             { key: folder.key },
             { $set: folder }
@@ -181,7 +183,7 @@ async function removeFolders() {
         ) {
           folder.state = state.state.UPLOAD
           folder.needSync = true
-          await Database.dbUpdate(
+          await Database.dbUpdateOne(
             Database.dbFolders,
             { key: folder.key },
             { $set: folder }
@@ -418,19 +420,12 @@ async function sincronizeCloudFolder() {
     })
     newFolders = lodash.differenceBy(children, newFolders, 'key')
     for (const folder of newFolders) {
-      /*
-      disable selective sync
       if (new Date(folder.value.created_at) >= lastSyncDate) {
         folder.needSync = true
         folder.select = true
         folder.state = state.state.DOWNLOAD
         select.push(folder)
       }
-      */
-      folder.needSync = true
-      folder.select = true
-      folder.state = state.state.DOWNLOAD
-      select.push(folder)
     }
   }
   ConfigStore.set('updatingDB', true)
@@ -526,6 +521,67 @@ function rootFolderExists() {
   })
 }
 
+async function checkSelectiveSync() {
+  const actions = PathTrie.generateAction()
+  if (actions.length === 0) {
+    return
+  }
+  for (const command of actions) {
+    const query = SelectiveMiddleware.generateRegExp(command.path, 0)
+    if (command.action === SelectiveMiddleware.selectAction.SELECT) {
+      await Database.dbUpdate(
+        Database.dbFolders,
+        { key: query },
+        { $set: { select: true } }
+      )
+      const selectFolders = await Database.dbFind(Database.dbFolders, {
+        key: query
+      })
+      const cloudFolders = await Database.dbFind(Database.dbFoldersCloud, {
+        key: query
+      })
+      const newFolders = lodash.differenceBy(cloudFolders, selectFolders, 'key')
+      newFolders.forEach(folder => {
+        folder.needSync = true
+        folder.select = true
+        folder.state = state.state.DOWNLOAD
+      })
+      Database.dbInsert(Database.dbFolders, newFolders)
+
+      await Database.dbUpdate(
+        Database.dbFiles,
+        { key: query },
+        { $set: { select: true } }
+      )
+      const selectFiles = await Database.dbFind(Database.dbFiles, {
+        key: query
+      })
+      const cloudFiles = await Database.dbFind(Database.dbFilesCloud, {
+        key: query
+      })
+      const newFiles = lodash.differenceBy(cloudFiles, selectFiles, 'key')
+      newFiles.forEach(file => {
+        file.state = state.state.DOWNLOAD
+        file.needSync = true
+        file.select = true
+      })
+      Database.dbInsert(Database.dbFiles, newFiles)
+    } else {
+      await Database.dbUpdate(
+        Database.dbFolders,
+        { key: query },
+        { $set: { select: false } }
+      )
+      await Database.dbUpdate(
+        Database.dbFiles,
+        { key: query },
+        { $set: { select: false } }
+      )
+    }
+  }
+  PathTrie.clearTrie()
+}
+
 export default {
   createRemoteFolder,
   getTempFolderPath,
@@ -535,5 +591,6 @@ export default {
   removeFolder,
   sincronizeLocalFolder,
   sincronizeCloudFolder,
-  rootFolderExists
+  rootFolderExists,
+  checkSelectiveSync
 }

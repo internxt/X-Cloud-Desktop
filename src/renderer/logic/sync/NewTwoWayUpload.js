@@ -198,6 +198,13 @@ async function SyncLogic(callback) {
           .catch(next)
       },
       next => {
+        app.emit('set-tooltip', 'Checking slective sync')
+        Logger.log('Checking slective sync')
+        Folder.checkSelectiveSync()
+          .then(() => next())
+          .catch(next)
+      },
+      next => {
         // console.timeEnd('update list')
         // console.time('sincronizar Local folder')
         app.emit('set-tooltip', 'Checking local folders')
