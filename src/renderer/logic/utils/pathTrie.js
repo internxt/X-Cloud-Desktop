@@ -45,23 +45,32 @@ const set = function(path, action) {
   node.children = []
 }
 
+const clearTrie = function() {
+  root = { children: [], level: 0 }
+}
+
 const generateAction = function() {
   const queue = []
   for (const children in root.children) {
     queue.push(root.children[children])
   }
   const res = []
-  let actualPath = ''
+  let actualPath = '.'
+  console.log(`path ini: ${actualPath}`)
   let node
   let lastLevel = 0
   while (queue.length !== 0) {
     node = queue.pop()
     let difference = lastLevel + 1 - node.level
     while (difference > 0) {
+      console.log(`path before dir: ${actualPath}`)
       actualPath = path.dirname(actualPath)
+      console.log(`path after dir: ${actualPath}`)
       difference--
     }
+    console.log(`path before join: ${actualPath}, ${node.key}`)
     actualPath = path.join(actualPath, node.key)
+    console.log(`path join: ${actualPath}`)
     lastLevel = node.level
     for (const children in node.children) {
       queue.push(node.children[children])
@@ -77,5 +86,6 @@ const generateAction = function() {
 export default {
   set,
   generateAction,
-  selectAction
+  selectAction,
+  clearTrie
 }

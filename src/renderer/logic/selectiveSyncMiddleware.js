@@ -1,5 +1,8 @@
 import Database from '../../database/index'
 import PathTrie from './utils/pathTrie'
+
+const matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g
+
 /**
  *
  * @param {string} path parent path, example: C:\\internxt
@@ -7,10 +10,9 @@ import PathTrie from './utils/pathTrie'
  */
 function generateRegExp(path, level = 0) {
   let sep
-  let parentPath = path
+  const parentPath = path.replace(matchOperatorsRe, '\\$&')
   if (process.platform === 'win32') {
     sep = '\\\\'
-    parentPath = parentPath.replace(/\\/g, '\\\\')
   } else {
     sep = '/'
   }
