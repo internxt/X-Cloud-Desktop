@@ -130,20 +130,17 @@ async function removeFolders() {
       throw Error('stop sync')
     }
     if (!folder.select) {
-      try {
-        await new Promise((resolve, reject) => {
-          rimraf(folder.key, err => {
-            if (err) {
-              reject(err)
-            }
-            resolve()
-          })
-        })
-      } catch (err) {
-        Logger.error(err)
-        continue
+      if (fs.readdirSync(folder.key).length === 0) {
+        try {
+          fs.rmdirSync(folder.key)
+          await Database.dbRemoveOne(Database.dbFolders, { key: folder.key })
+        } catch (e) {
+          if (!/no such file or directory/.test(e.message)) {
+            await Database.dbRemoveOne(Database.dbFolders, { key: folder.key })
+            continue
+          }
+        }
       }
-      await Database.dbRemoveOne(Database.dbFolders, { key: folder.key })
       continue
     }
     if (folder.state === state.state.DELETEIGNORE) {
@@ -230,7 +227,9 @@ async function createFolders() {
   select.forEach(elem => {
     selectIndex[elem.key] = i++
   })
-
+  select.sort((a, b) => {
+    return a.key.length - b.key.length
+  })
   const needUpload = []
   needUpload[basePath] = { children: [], id: rootId }
   let totalFolder = 0
@@ -269,6 +268,10 @@ async function createFolders() {
       const parentDir = path.dirname(folder.key)
       folder.nameChecked = true
       const parent = select[selectIndex[parentDir]]
+      if (parent && !parent.select) {
+        folder.select = false
+        continue
+      }
       if (parentDir !== basePath && state.ignoredState.includes(parent.state)) {
         folder.nameChecked = true
         folder.state = state.state.IGNORECLOUDNOTEXISTS
@@ -404,7 +407,7 @@ async function sincronizeCloudFolder() {
     }
   }
   var newFolders = select.flatMap(e => {
-    if (e.value && e.value.id) {
+    if (e.value && e.value.id && e.select) {
       return { key: e.key, value: { id: e.value.id } }
     }
     return []
@@ -448,14 +451,14 @@ async function sincronizeLocalFolder() {
       throw Error('stop sync')
     }
     const FolderSelect = indexDict[item]
-    // local exist, select not exist
+    // elect and local exist
     if (FolderSelect !== undefined) {
       select[FolderSelect].state = state.transition(
         select[FolderSelect].state,
         state.word.ensure
       )
     } else {
-      // select and local exist
+      // local exist, select not exist
       select.push({
         key: item,
         value: null,

@@ -19,7 +19,7 @@ function generateRegExp(path, level = 0) {
   if (level) {
     return new RegExp(`^(/){0,1}${parentPath}(${sep}[^${sep}]+){1,${level}}[^${sep}]+$`)
   } else {
-    return new RegExp(`^(/){0,1}${parentPath}`)
+    return new RegExp(`^(/){0,1}(${parentPath}$|${parentPath}${sep})`)
   }
 }
 

@@ -18,6 +18,7 @@ import crypto from './crypt'
 import SyncMode from './sync/NewTwoWayUpload'
 import FileLogger from './FileLogger'
 import Spaceusage from './utils/spaceusage'
+import SelectiveMiddleware from './selectiveSyncMiddleware'
 
 const remote = require('@electron/remote')
 // eslint-disable-next-line no-empty-character-class
@@ -258,7 +259,7 @@ async function sincronizeCloudFile() {
     return { key: e }
   })
   selectFolder = selectFolder.flatMap(e => {
-    if (!e.value || !e.value.id) {
+    if (!e.value || !e.value.id || !e.select) {
       return []
     }
     return e.value.id
@@ -369,30 +370,45 @@ async function sincronizeFile() {
     }
     remote.app.emit('set-tooltip', `Checking file ${file.key}`)
     if (!file.select) {
-      try {
-        fs.unlinkSync(file.key)
-        await Database.dbRemoveOne(Database.dbFiles, { key: file.key })
-        continue
-      } catch (e) {
-        if (/no such file or directory/.test(e.message)) {
+      if (
+        file.state !== state.state.UPLOAD &&
+        file.state !== state.state.IGNORECLOUDNOTEXISTS
+      ) {
+        try {
+          fs.unlinkSync(file.key)
           await Database.dbRemoveOne(Database.dbFiles, { key: file.key })
-        } else {
-          Logger.error(e)
+          continue
+        } catch (e) {
+          if (/no such file or directory/.test(e.message)) {
+            await Database.dbRemoveOne(Database.dbFiles, { key: file.key })
+          } else {
+            Logger.error(e)
+          }
         }
-        continue
       }
+      continue
     }
     let parentFolder = path.dirname(file.key)
     if (parentFolder === rootPath) {
       parentFolder = {
         key: rootPath,
         value: { id: user.user.root_folder_id },
-        state: state.state.SYNCED
+        state: state.state.SYNCED,
+        select: true
       }
     } else {
       parentFolder = await Database.dbFindOne(Database.dbFolders, {
         key: path.dirname(file.key)
       })
+    }
+    if (!parentFolder.select) {
+      file.select = false
+      await Database.dbUpdateOne(
+        Database.dbFiles,
+        { key: file.key },
+        { $set: file }
+      )
+      continue
     }
     if (!file.nameChecked) {
       if (!parentFolder || state.ignoredState.includes(parentFolder.state)) {
@@ -718,7 +734,11 @@ async function uploadState(file, rootPath, user, parentFolder) {
       user,
       parentFolder
     )
-    await Database.dbUpdateOne(Database.dbFiles, { key: file.key }, { $set: file })
+    await Database.dbUpdateOne(
+      Database.dbFiles,
+      { key: file.key },
+      { $set: file }
+    )
     return
   }
   if (cloudFile && !localFile) {
@@ -862,7 +882,11 @@ async function downloadState(file, rootPath, user, parentFolder) {
   }
   if (cloudFile && !localFile) {
     await downloadFile(file, cloudFile, localFile)
-    await Database.dbUpdateOne(Database.dbFiles, { key: file.key }, { $set: file })
+    await Database.dbUpdateOne(
+      Database.dbFiles,
+      { key: file.key },
+      { $set: file }
+    )
     return
   }
   if (!localFile && !cloudFile) {
@@ -940,7 +964,11 @@ async function deleteCloudState(file, rootPath, user, parentFolder) {
       user,
       parentFolder
     )
-    await Database.dbUpdateOne(Database.dbFiles, { key: file.key }, { $set: file })
+    await Database.dbUpdateOne(
+      Database.dbFiles,
+      { key: file.key },
+      { $set: file }
+    )
     return
   }
   if (cloudFile && !localFile) {
@@ -1072,7 +1100,11 @@ async function deleteLocalState(file, rootPath, user, parentFolder) {
   }
   if (cloudFile && !localFile) {
     await downloadFile(file, cloudFile, localFile)
-    await Database.dbUpdateOne(Database.dbFiles, { key: file.key }, { $set: file })
+    await Database.dbUpdateOne(
+      Database.dbFiles,
+      { key: file.key },
+      { $set: file }
+    )
     return
   }
   if (!localFile && !cloudFile) {
